@@ -4,7 +4,6 @@ const common = require('./webpack.common.js');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-
 const targetDir = 'dist';
 
 module.exports = common.map(config => {
@@ -19,6 +18,7 @@ module.exports = common.map(config => {
     plugins: [
       new HtmlWebpackPlugin({
         title: 'demo 页面',
+        excludeChunks: ['index', 'index.js'],
         // Load a custom template (lodash by default)
         template: 'demo/index.html'
       }),

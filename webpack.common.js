@@ -2,7 +2,10 @@ const path = require('path');
 // const tsImportPluginFactory = require('ts-import-plugin');
 
 const commontConfig = {
-  entry: './src/index.tsx',
+  entry: {
+    index: './src/index.tsx',
+    demo: './demo/demo.tsx'
+  },
   node: {
     fs: 'empty'
   },
@@ -41,7 +44,7 @@ const commontConfig = {
 
 const normalConfig = Object.assign({}, commontConfig, {
   output: {
-    filename: 'index.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   }
 });
