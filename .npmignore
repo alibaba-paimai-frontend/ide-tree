@@ -8,3 +8,8 @@ test
 src
 stories
 storybook-static
+.storybook
+coverage
+demo
+tsconfig.json
+jest.config.js
