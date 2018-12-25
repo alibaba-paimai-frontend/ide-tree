@@ -10,6 +10,7 @@
     "release": "standard-version",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
+    "prepublish": "npm run build",
     "storybook": "start-storybook -p 9001 -c .storybook"
   },
   "keywords": [],
