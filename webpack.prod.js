@@ -10,6 +10,10 @@ const targetDir = 'dist';
 const defaultConfig = common.map(config => {
   return merge(config, {
     entry: './src/index.tsx',
+    output: {
+      filename: 'index.js',
+      path: path.resolve(__dirname, 'dist')
+    },
     mode: 'production',
     devtool: 'source-map',
     optimization: {
