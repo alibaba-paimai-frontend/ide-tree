@@ -1,6 +1,6 @@
 {
   "name": "ide-tree",
-  "version": "1.0.5",
+  "version": "2.0.2",
   "description": "",
   "main": "dist/index.js",
   "browser": "dist/index.umd.js",
