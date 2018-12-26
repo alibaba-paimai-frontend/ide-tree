@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v1.0.4...v2.0.0) (2018-12-26)
+
+
+### Code Refactoring
+
+* **重构:** 组件重命名，webpack build 配置更改 ([7afee15](https://github.com/alibaba-paimai-frontend/ide-tree/commit/7afee15))
+
+
+### BREAKING CHANGES
+
+* **重构:** 重命名组件名，将 ComponentTree 更改成 SchemaTree； 重新更改 webpack 打包
+
+
+
 <a name="1.0.4"></a>
 ## [1.0.4](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v1.0.3...v1.0.4) (2018-12-25)
 
