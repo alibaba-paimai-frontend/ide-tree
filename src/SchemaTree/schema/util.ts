@@ -1,4 +1,4 @@
-import { Schema, ISchemaModel } from '.';
+import { SchemaModel, ISchemaModel } from '.';
 import { invariant, uuid, pick } from '../../lib/util';
 import { map, traverse, NodeLikeObject, TRAVERSE_TYPE } from 'ss-tree';
 
@@ -100,7 +100,7 @@ export function createSchemaModel(schema: any): ISchemaModel {
     schema,
     (node: any) => {
       // 设置属性
-      const newSchema = Schema.create({
+      const newSchema = SchemaModel.create({
         id:
           (<ISchemaObject>node).id ||
           genCompIdByName((<ISchemaObject>node).name, false, true),

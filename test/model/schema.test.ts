@@ -1,4 +1,4 @@
-import { Schema, ISchemaModel } from '../../src/SchemaTree/schema/';
+import { SchemaModel, ISchemaModel } from '../../src/SchemaTree/schema/';
 import { createSchemaModel } from '../../src/SchemaTree/schema/util';
 import { strMapToObj } from '../../src/lib/util';
 import Chance from 'chance';
@@ -49,7 +49,7 @@ const schemaData = {
 };
 describe('[Schema] schema 模型  - 创建模型', () => {
   test('默认创建的对象', () => {
-    const schema = Schema.create({});
+    const schema = SchemaModel.create({});
     expect(schema.id).toBe('');
     expect(schema.name).toBe('');
     expect(schema.attrs).toBe('{}');
@@ -62,7 +62,35 @@ describe('[Schema] 属性 - schemaJSON 属性', () => {
   test(' schema 属性中不存在 functions 和 ids 等属性', () => {
     const schema = createSchemaModel(schemaData);
 
-    expect(schema.schemaJSON).toEqual({"children": [{ "children": [{ "children": [], "events": { "onChange": "__$grandson_onClick" }, "functions": {}, "id": "grandson", "name": "second", "props": { "label": "文案3" }, "screenId": "$second_1" }], "events": { "onChange": "__$son_onClick" }, "functions": {}, "id": "son", "name": "first", "props": { "label": "文案2" }, "screenId": "$first_1" }], "events": { "onChange": "__$father_onChange" }, "functions": {}, "id": "father", "name": "root", "props": { "label": "文案1" }, "screenId": "$root_1" });
+    expect(schema.schemaJSON).toEqual({
+      children: [
+        {
+          children: [
+            {
+              children: [],
+              events: { onChange: '__$grandson_onClick' },
+              functions: {},
+              id: 'grandson',
+              name: 'second',
+              props: { label: '文案3' },
+              screenId: '$second_1'
+            }
+          ],
+          events: { onChange: '__$son_onClick' },
+          functions: {},
+          id: 'son',
+          name: 'first',
+          props: { label: '文案2' },
+          screenId: '$first_1'
+        }
+      ],
+      events: { onChange: '__$father_onChange' },
+      functions: {},
+      id: 'father',
+      name: 'root',
+      props: { label: '文案1' },
+      screenId: '$root_1'
+    });
   });
 });
 
@@ -70,7 +98,15 @@ describe('[Schema] 方法 - findNode 方法', () => {
   const schema = createSchemaModel(schemaData);
   const node = schema.findNode('grandson') as ISchemaModel;
 
-  expect(node.schemaJSON).toEqual({ "children": [], "events": { "onChange": "__$grandson_onClick" }, "functions": {}, "id": "grandson", "name": "second", "props": { "label": "文案3" }, "screenId": "$second_1" });
+  expect(node.schemaJSON).toEqual({
+    children: [],
+    events: { onChange: '__$grandson_onClick' },
+    functions: {},
+    id: 'grandson',
+    name: 'second',
+    props: { label: '文案3' },
+    screenId: '$second_1'
+  });
 });
 
 describe('[Schema] 方法 - removeChildren 方法', () => {

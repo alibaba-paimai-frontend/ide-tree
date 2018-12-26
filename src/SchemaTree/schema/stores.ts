@@ -1,11 +1,11 @@
 import { types, SnapshotOrInstance, Instance } from 'mobx-state-tree';
 import { createEmptyModel } from './util';
-import { ISchemaModel, Schema } from './index';
+import { ISchemaModel, SchemaModel } from './index';
 import { debugInteract } from '../../lib/debug';
 
 export const Stores = types
   .model('StoresModel', {
-    schema: Schema,
+    schema: SchemaModel,
     selectedId: types.optional(types.string, ''),
     expandedIds: types.array(types.string)
   })

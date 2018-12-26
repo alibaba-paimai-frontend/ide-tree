@@ -16,20 +16,6 @@ export type SchemaTreeNodeMouseEvent = {
   event: React.MouseEventHandler<any>;
 };
 
-interface NodeProps {
-  name: string;
-  id: string;
-  childArray?: any[];
-}
-
-export function TreeNodeCanAddChild({ name, id, childArray = [] }: NodeProps) {
-  return (
-    <TreeNode title={name} key={id}>
-      {childArray || null}
-    </TreeNode>
-  );
-}
-
 type onExpandFunction = (
   expandedKeys: string[],
   info: AntTreeNodeExpandedEvent

@@ -11,40 +11,18 @@ import {
 
 import { map, traverse } from 'ss-tree';
 
-// // 子模块类型
-// export enum ChildType {
-//   NORMAL = 'NORMAL',
-//   SPECIAL = 'SPECIAL'
-// }
-
-/**
- * 函数模型，借此绑定该组件的多种函数
- */
-const Func = types
-  .model('FuncModel', {
-    name: types.optional(types.string, ''),
-    body: types.optional(types.string, '')
-  })
-  .views(self => ({
-    get definition() {
-      // 获取函数定义
-      return `window['${self.name}'] = ${self.body}`;
-    }
-  }));
-
-export interface IFunctionModel extends Instance<typeof Func> {}
 
 /**
  * 组件 schema 模型
  */
-export const Schema = types
+export const SchemaModel = types
   .model('SchemaModel', {
     id: types.optional(types.string, ''), // 创建之后固定，不能再更改
     screenId: types.optional(types.string, ''), // 这个是显示在页面上的 id，是可以被更改的，该 id 是用在回调函数等地方
     name: types.optional(types.string, ''),
     attrs: types.optional(types.string, '{}'), // 保存属性字符串,
     parentId: types.optional(types.string, ''), // 保存父节点
-    children: types.array(types.late((): IAnyModelType => Schema)) // 在 mst v3 中， `types.array` 默认值就是 `[]`
+    children: types.array(types.late((): IAnyModelType => SchemaModel)) // 在 mst v3 中， `types.array` 默认值就是 `[]`
   })
 
   // 基于 mobx 的 computed 功能，默认会有缓存功能
@@ -290,4 +268,4 @@ export const Schema = types
     };
   });
 
-export interface ISchemaModel extends Instance<typeof Schema> {}
+export interface ISchemaModel extends Instance<typeof SchemaModel> {}
