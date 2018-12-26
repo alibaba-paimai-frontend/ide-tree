@@ -11,7 +11,7 @@ import { AppFactory } from './controller/index';
 
 const TreeNode = Tree.TreeNode;
 
-export type ComponentTreeNodeMouseEvent = {
+export type SchemaTreeNodeMouseEvent = {
   node: ISchemaObject;
   event: React.MouseEventHandler<any>;
 };
@@ -51,7 +51,7 @@ interface TreeProps {
   /**
    * 右键点击节点的回调函数
    */
-  onRightClickNode?: (options: ComponentTreeNodeMouseEvent) => void;
+  onRightClickNode?: (options: SchemaTreeNodeMouseEvent) => void;
 
   /** 展开/收起节点时触发 */
   onExpand?: onExpandFunction;
@@ -76,7 +76,7 @@ interface TreeState {
 // 推荐使用 decorator 的方式，否则 stories 的导出会缺少 **Prop Types** 的说明
 // 因为 react-docgen-typescript-loader 需要  named export 导出方式
 @observer
-export class ComponentTree extends Component<TreeWithSchemaProps, TreeState> {
+export class SchemaTree extends Component<TreeWithSchemaProps, TreeState> {
   constructor(props: TreeWithSchemaProps) {
     super(props);
     this.state = {};
@@ -95,7 +95,7 @@ export class ComponentTree extends Component<TreeWithSchemaProps, TreeState> {
   /**
    * 非递归生成组件树结构
    *
-   * @memberof ComponentTree
+   * @memberof SchemaTree
    */
   renderTree = (root: ISchemaModel | ISchemaObject) => {
     const treeNodeIdMap: any = {};
@@ -159,7 +159,7 @@ export class ComponentTree extends Component<TreeWithSchemaProps, TreeState> {
 
     return (
       <Tree
-        key="componentTree"
+        key="SchemaTree"
         showLine
         defaultExpandAll={true}
         autoExpandParent={false}
@@ -195,13 +195,13 @@ const onSelectNodeWithStore = (
 };
 
 /**
- * 科里化创建 ComponentTreeWithStore 组件
+ * 科里化创建 SchemaTreeWithStore 组件
  * @param stores - store 模型实例
  */
-export const ComponentTreeAddStore = (stores: IStoresModel) =>
-  observer(function ComponentTreeWithStore(props: TreeWithSchemaProps) {
+export const SchemaTreeAddStore = (stores: IStoresModel) =>
+  observer(function SchemaTreeWithStore(props: TreeWithSchemaProps) {
     return (
-      <ComponentTree
+      <SchemaTree
         schema={stores.schema}
         selectedId={stores.selectedId}
         expandedIds={stores.expandedIds}
@@ -213,15 +213,15 @@ export const ComponentTreeAddStore = (stores: IStoresModel) =>
   });
 /**
  * 工厂函数，每调用一次就获取一副 MVC
- * 用于隔离不同的 ComponentTreeWithStore 的上下文
+ * 用于隔离不同的 SchemaTreeWithStore 的上下文
  */
-export const ComponentTreeFactory = () => {
+export const SchemaTreeFactory = () => {
   const stores = StoresFactory(); // 创建 model
   const app = AppFactory(stores); // 创建 controller，并挂载 model
   return {
     stores,
     app,
     client: app.client,
-    ComponentTreeWithStore: ComponentTreeAddStore(stores)
+    SchemaTreeWithStore: SchemaTreeAddStore(stores)
   };
 };

@@ -8,9 +8,9 @@
 // );
 
 
-export * from './ComponentTree/';
-export * from './ComponentTree/schema/';
-export * from './ComponentTree/schema/util';
-export * from './ComponentTree/schema/stores';
+export * from './SchemaTree/';
+export * from './SchemaTree/schema/';
+export * from './SchemaTree/schema/util';
+export * from './SchemaTree/schema/stores';
 
-export * from './ComponentTree/controller/';
+export * from './SchemaTree/controller/';

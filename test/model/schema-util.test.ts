@@ -3,7 +3,7 @@ import {
   createEmptyModel,
   getAllNodes
   // getAllIds
-} from '../../src/ComponentTree/schema/util';
+} from '../../src/SchemaTree/schema/util';
 import { strMapToObj } from '../../src/lib/util';
 describe('[SchemaUtil] createSchemaModel - 根据 json 创建 schema ', () => {
   test('单层级创建，自动创建 id', () => {

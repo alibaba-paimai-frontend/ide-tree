@@ -48,6 +48,6 @@ const plainObject = {
 传递普通对象数据的话，就没有了 mobx 的自动响应变化的能力了。
 
 ```js
-<ComponentTree schema={plainObject} selectedId={'Col_1'} />
+<SchemaTree schema={plainObject} selectedId={'Col_1'} />
 ```
 

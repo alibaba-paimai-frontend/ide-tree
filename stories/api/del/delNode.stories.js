@@ -4,11 +4,11 @@ import { Row, Col, Input, Button } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdDelNode from './delNode.md';
 
-import { ComponentTreeFactory } from '../../../src';
+import { SchemaTreeFactory } from '../../../src';
 import { treegen } from '../../helper';
-// const { ComponentTreeWithStore, client } = ComponentTreeFactory();
+// const { SchemaTreeWithStore, client } = SchemaTreeFactory();
 
-const {ComponentTreeWithStore, client} = ComponentTreeFactory();
+const {SchemaTreeWithStore, client} = SchemaTreeFactory();
 
 const styles = {
   demoWrap: {
@@ -62,7 +62,7 @@ storiesOf('API - del', module)
             </Col>
           </Row>
 
-          <ComponentTreeWithStore />
+          <SchemaTreeWithStore />
         </Col>
         <Col span={12}>
           <div id="info" />

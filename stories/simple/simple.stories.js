@@ -2,7 +2,7 @@ import React from 'react';
 import { storiesOf } from '@storybook/react';
 import { wInfo } from '../../.storybook/utils';
 
-import { ComponentTree, createSchemaModel } from '../../src/';
+import { SchemaTree, createSchemaModel } from '../../src/';
 
 import mdMobx from './simple-mobx.md';
 import mdPlain from './simple-plain.md';
@@ -42,7 +42,7 @@ storiesOf('基础使用', module)
   .addParameters(wInfo(mdMobx))
   .addWithJSX('使用 mobx 对象', () => (
     <div>
-      <ComponentTree
+      <SchemaTree
         schema={schema}
         selectedId={'Col_1'}
         expandedIds={['Row_1']}
@@ -54,7 +54,7 @@ storiesOf('基础使用', module)
   .addParameters(wInfo(mdPlain))
   .addWithJSX('普通 schema 对象', () => (
     <div>
-      <ComponentTree
+      <SchemaTree
         schema={plainSchema}
         selectedId={'Col_1'}
         expandedIds={['Row_1']}

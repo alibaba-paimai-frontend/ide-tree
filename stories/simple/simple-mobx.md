@@ -25,9 +25,9 @@ const schema = createSchemaModel({
 });
 ```
 
-将该 schema 传给 `ComponentTree` 组件即可。
+将该 schema 传给 `SchemaTree` 组件即可。
 ```js
-<ComponentTree schema={schema} selectedId={'Col_1'} />
+<SchemaTree schema={schema} selectedId={'Col_1'} />
 ```
 
 因为是 mobx 对象，当我们更改其中的属性后属性将会生效；

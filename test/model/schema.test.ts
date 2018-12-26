@@ -1,5 +1,5 @@
-import { Schema, ISchemaModel } from '../../src/ComponentTree/schema/';
-import { createSchemaModel } from '../../src/ComponentTree/schema/util';
+import { Schema, ISchemaModel } from '../../src/SchemaTree/schema/';
+import { createSchemaModel } from '../../src/SchemaTree/schema/util';
 import { strMapToObj } from '../../src/lib/util';
 import Chance from 'chance';
 const chance = new Chance();

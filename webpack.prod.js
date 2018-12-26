@@ -32,6 +32,15 @@ const defaultConfig = common.map(config => {
 module.exports = defaultConfig.concat([
   merge(defaultConfig[0], {
     entry: './src/index.tsx',
+    externals: {
+      react: 'react',
+      'react-dom': 'react-dom',
+      antd: 'antd',
+      mobx: 'mobx',
+      'mobx-react': 'mobx-react',
+      'mobx-state-tree': 'mobx-state-tree',
+      'ss-tree': 'ss-tree'
+    },
     output: {
       filename: 'index.umd.js',
       path: path.resolve(__dirname, 'dist'),

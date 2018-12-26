@@ -4,23 +4,23 @@ import { Row, Col, Input, Button } from 'antd';
 import { wInfo } from '../../../.storybook/utils';
 import mdGetNode from './getNode.md';
 
-import { ComponentTreeFactory } from '../../../src';
+import { SchemaTreeFactory } from '../../../src';
 import { treegen } from '../../helper';
-// const { ComponentTreeWithStore, client } = ComponentTreeFactory();
+// const { SchemaTreeWithStore, client } = SchemaTreeFactory();
 
 const {
-  ComponentTreeWithStore: ComponentTreeWithStore1,
+  SchemaTreeWithStore: SchemaTreeWithStore1,
   client: client1
-} = ComponentTreeFactory();
+} = SchemaTreeFactory();
 const {
-  ComponentTreeWithStore: ComponentTreeWithStore2,
+  SchemaTreeWithStore: SchemaTreeWithStore2,
   client: client2
-} = ComponentTreeFactory();
+} = SchemaTreeFactory();
 
 const {
-  ComponentTreeWithStore: ComponentTreeWithStore3,
+  SchemaTreeWithStore: SchemaTreeWithStore3,
   client: client3
-} = ComponentTreeFactory();
+} = SchemaTreeFactory();
 
 const styles = {
   demoWrap: {
@@ -75,7 +75,7 @@ storiesOf('API - get（schema隔离）', module)
           </Button>
           <Button onClick={createNew(client1)}>创建随机树</Button>
 
-          <ComponentTreeWithStore1 />
+          <SchemaTreeWithStore1 />
         </Col>
         <Col span={12}>
           <div id="info" />
@@ -97,7 +97,7 @@ storiesOf('API - get（schema隔离）', module)
               </>
             }
           />
-          <ComponentTreeWithStore2 />
+          <SchemaTreeWithStore2 />
         </Col>
         <Col span={12}>
           <div id="info" />
@@ -117,7 +117,7 @@ storiesOf('API - get（schema非隔离）', module)
           </Button>
           <Button onClick={createNew(client3)}>创建随机树</Button>
 
-          <ComponentTreeWithStore3 />
+          <SchemaTreeWithStore3 />
         </Col>
         <Col span={12}>
           <div id="info" />
@@ -139,7 +139,7 @@ storiesOf('API - get（schema非隔离）', module)
               </>
             }
           />
-          <ComponentTreeWithStore3 />
+          <SchemaTreeWithStore3 />
         </Col>
         <Col span={12}>
           <div id="info" />
