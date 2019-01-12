@@ -3,8 +3,13 @@ import { createEmptyModel } from './util';
 import { ISchemaModel, SchemaModel } from './index';
 import { debugInteract } from '../../lib/debug';
 
+export const STORE_ID_PREIX = 'sst_';
 export const Stores = types
   .model('StoresModel', {
+    id: types.refinement(
+      types.identifier,
+      identifier => identifier.indexOf(STORE_ID_PREIX) === 0
+    ),
     schema: SchemaModel,
     selectedId: types.optional(types.string, ''),
     expandedIds: types.array(types.string)
@@ -66,17 +71,15 @@ export const Stores = types
     };
   });
 
-export const stores = Stores.create({
-  schema: createEmptyModel() as any
-});
-
 export interface IStoresModel extends Instance<typeof Stores> {}
 
+let autoId = 1;
 /**
  * 工厂方法，用于创建 stores
  */
 export function StoresFactory(): IStoresModel {
   return Stores.create({
+    id: `${STORE_ID_PREIX}${autoId++}`,
     schema: createEmptyModel() as any
   });
 }

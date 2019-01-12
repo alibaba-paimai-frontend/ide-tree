@@ -13,7 +13,10 @@ const TreeNode = Tree.TreeNode;
 
 export type SchemaTreeNodeMouseEvent = {
   node: ISchemaObject;
-  event: React.MouseEventHandler<any>;
+  event: {
+    clientX: number;
+    clientY: number;
+  };
 };
 
 type onExpandFunction = (
@@ -33,7 +36,9 @@ interface TreeProps {
    * 默认展开的树节点 id
    */
   expandedIds?: string[];
+}
 
+export interface ISchemaTreeEvent {
   /**
    * 右键点击节点的回调函数
    */
@@ -48,22 +53,18 @@ interface TreeProps {
   onSelectNode?: onSelectNodeFunction;
 }
 
-interface TreeWithSchemaProps extends TreeProps {
+export interface ISchemaTreeProps extends TreeProps, ISchemaTreeEvent {
   /**
    * 生成组件树的 schema 对象
    */
   schema: ISchemaModel | ISchemaObject;
 }
 
-interface TreeState {
-  // selectedId?: string;
-}
-
 // 推荐使用 decorator 的方式，否则 stories 的导出会缺少 **Prop Types** 的说明
 // 因为 react-docgen-typescript-loader 需要  named export 导出方式
 @observer
-export class SchemaTree extends Component<TreeWithSchemaProps, TreeState> {
-  constructor(props: TreeWithSchemaProps) {
+export class SchemaTree extends Component<ISchemaTreeProps> {
+  constructor(props: ISchemaTreeProps) {
     super(props);
     this.state = {};
   }
@@ -133,9 +134,14 @@ export class SchemaTree extends Component<TreeWithSchemaProps, TreeState> {
     const { node, event } = option;
     const { schema, onRightClickNode } = this.props;
     let id = node.props.eventKey; // key就是他
+
+    // 注意 Event looping 特性，所需要的事件属性需要事先取出来
+    const clientX = (event as any).clientX;
+    const clientY = (event as any).clientY;
+
     if (!!id && onRightClickNode) {
       let node = findById(schema, id) as ISchemaObject;
-      onRightClickNode({ event, node });
+      onRightClickNode({ event: { clientX, clientY }, node });
     }
   };
 
@@ -185,15 +191,16 @@ const onSelectNodeWithStore = (
  * @param stores - store 模型实例
  */
 export const SchemaTreeAddStore = (stores: IStoresModel) =>
-  observer(function SchemaTreeWithStore(props: TreeWithSchemaProps) {
+  observer(function SchemaTreeWithStore(props: ISchemaTreeProps) {
+    const { onExpand, onSelectNode, ...otherProps } = props;
     return (
       <SchemaTree
         schema={stores.schema}
         selectedId={stores.selectedId}
         expandedIds={stores.expandedIds}
-        onExpand={onExpandWithStore(stores, props.onExpand)}
-        onSelectNode={onSelectNodeWithStore(stores, props.onSelectNode)}
-        {...props}
+        onExpand={onExpandWithStore(stores, onExpand)}
+        onSelectNode={onSelectNodeWithStore(stores, onSelectNode)}
+        {...otherProps}
       />
     );
   });

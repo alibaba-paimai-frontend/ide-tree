@@ -45,7 +45,7 @@ module.exports = defaultConfig.concat([
       filename: 'index.umd.js',
       path: path.resolve(__dirname, 'dist'),
       libraryTarget: 'umd',
-      library: 'IdeTree',
+      library: 'ideSchemaTree',
       umdNamedDefine: true
     }
   })
