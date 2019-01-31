@@ -1,16 +1,25 @@
-import { types, destroy, IAnyModelType, Instance } from 'mobx-state-tree';
-import { debugModel } from '../../lib/debug';
+import {
+  types,
+  destroy,
+  IAnyModelType,
+  Instance,
+  SnapshotOrInstance,
+  cast
+} from 'mobx-state-tree';
+import { debugModel, debugInteract } from '../../lib/debug';
 import { invariant, sortNumberDesc, pick } from '../../lib/util';
 import {
-  ISchemaObject,
   stringifyAttribute,
   findById,
   getAllNodes,
-  updateNode
+  updateSchema,
+  createEmptySchema,
+  updateSchemaTree
 } from './util';
 
-import { map, traverse } from 'ss-tree';
+import { ISchemaProps } from '../../index';
 
+import { map } from 'ss-tree';
 
 /**
  * 组件 schema 模型
@@ -51,7 +60,7 @@ export const SchemaModel = types
       get schemaJSON() {
         return map(
           self,
-          (node: ISchemaObject) => {
+          (node: ISchemaProps) => {
             return Object.assign({}, (node as any).attrsJSON, {
               id: node.id,
               screenId: node.screenId,
@@ -95,8 +104,7 @@ export const SchemaModel = types
        * 只返回所有的节点的属性子集合，其实该方法和 util 中的 `allNodesWithFilter` 有异曲同工之处
        * 依赖：allNodes
        */
-      allNodesWithFilter(filterArray?: string | string[]) {
-        if (!filterArray) return self.allNodes;
+      allNodesWithFilter(filterArray: string | string[] = CONTROLLED_KEYS) {
         const filters = [].concat(filterArray || []);
         return self.allNodes.map((node: any) => pick(node, filters));
       }
@@ -108,9 +116,9 @@ export const SchemaModel = types
        * 更新 parentId 属性
        * 影响属性：parentId
        */
-      setParentId(model: any) {
-        invariant(model && model.id, `${model} 节点不能为空，且必须要有 id`);
-        self.parentId = model.id;
+      setParentId(id: string) {
+        invariant(!!id, `不能将 id 设置成空`);
+        self.parentId = id;
       },
       /**
        * 更新 children 属性
@@ -120,7 +128,7 @@ export const SchemaModel = types
         // 设置子节点的时候需要绑定父节点
         // this.children = children || [];
         children.forEach((child: any) => {
-          child.setParentId(self); // 绑定父节点
+          child.setParentId(self.id); // 绑定父节点
         });
         self.children = children || [];
       },
@@ -163,7 +171,7 @@ export const SchemaModel = types
           attrObject = JSON.parse(attrOrObject);
         }
 
-        self.attrs = stringifyAttribute(attrObject as ISchemaObject);
+        self.attrs = stringifyAttribute(attrObject as ISchemaProps);
       }
     };
   })
@@ -175,7 +183,7 @@ export const SchemaModel = types
        * 影响属性：attrName 对应的属性
        */
       updateAttribute: (attrName: string, value: string | object): boolean => {
-        return updateNode(self as ISchemaModel, attrName, value);
+        return updateSchema(self as ISchemaModel, attrName, value);
       },
 
       /**
@@ -193,7 +201,7 @@ export const SchemaModel = types
 
         if (!!node) {
           // 首先找到节点
-          return updateNode(node as ISchemaModel, attrName, value);
+          return updateSchema(node as ISchemaModel, attrName, value);
         }
         return false;
       }
@@ -202,7 +210,7 @@ export const SchemaModel = types
   // 删除操作
   .actions(self => {
     return {
-      removeNode: (id: string): false | ISchemaObject => {
+      removeNode: (id: string): false | ISchemaProps => {
         if (!id) return false;
 
         const node = self.findNode(id); // 找到指定的节点
@@ -226,7 +234,7 @@ export const SchemaModel = types
       addChildren: (nodeOrNodeArray: ISchemaModel | ISchemaModel[]) => {
         const nodes = [].concat(nodeOrNodeArray);
         nodes.forEach(node => {
-          node.setParentId(self);
+          node.setParentId(self.id);
           self.children.push(node);
         });
       },
@@ -269,3 +277,87 @@ export const SchemaModel = types
   });
 
 export interface ISchemaModel extends Instance<typeof SchemaModel> {}
+
+// 获取被 store 控制的 key 的列表
+export type TSchemaTreeControlledKeys = keyof SnapshotOrInstance<
+  typeof SchemaTreeModel
+>;
+
+// 定义被 store 控制的 key 的列表，没法借用 ts 的能力动态从 TSchemaControlledKeys 中获取
+export const CONTROLLED_KEYS: string[] = [
+  'schema',
+  'selectedId',
+  'expandedIds'
+];
+
+export const SchemaTreeModel = types
+  .model('SchemaTreeModel', {
+    schema: SchemaModel,
+    selectedId: types.optional(types.string, ''),
+    expandedIds: types.array(types.string)
+  })
+  .actions(self => {
+    return {
+      setSchema(model: SnapshotOrInstance<typeof self.schema>) {
+        self.schema = cast(model);
+      },
+      setExpandedIds(ids: SnapshotOrInstance<typeof self.expandedIds> = []) {
+        self.expandedIds = ids as any;
+      },
+      setSelectedId(id: SnapshotOrInstance<typeof self.selectedId>) {
+        self.selectedId = id;
+      }
+    };
+  })
+  .actions(self => {
+    return {
+      updateAttribute(name: string, value: any) {
+        return updateSchemaTree(self as ISchemaTreeModel, name, value);
+      }
+    };
+  })
+  .actions(self => {
+    return {
+      // 自动展开节点，让其出现在视野内
+      autoExpandIdIntoView(id: string) {
+        /* ----------------------------------------------------
+        自动展开看到当前节点，注意放在 expandedIds 是目标节点的父节点 id
+        还有一种情况是，某个节点是深层次折叠的（比如直接折叠根节点），此时需要往上溯源
+      ----------------------------------------------------- */
+        if (!id) return;
+
+        let currentId = id; // id 指针
+        const shouldExpand: string[] = [];
+
+        const expandedIds = self.expandedIds.slice() as any;
+
+        // 从子节点一直溯源到父节点，注意不要死循环了。。。
+        while (!!currentId) {
+          const node = self.schema.findNode(currentId);
+          const parentId = node && node.parentId; // 定位到父节点
+          currentId = parentId; // 更新 id 指针
+          // 如果不存在 id，则更新 shouldExpand
+          if (!~expandedIds.indexOf(currentId) && !!currentId) {
+            shouldExpand.push(currentId);
+          }
+        }
+
+        debugInteract(
+          `[自动展开节点] expandedIds: ${expandedIds}, shouldExpand: ${shouldExpand}`
+        );
+        self.setExpandedIds(expandedIds.concat(shouldExpand));
+      },
+
+      /**
+       * 重置 schema，相当于创建空树
+       * 影响范围：整棵树
+       */
+      resetToEmpty() {
+        const nodeToRemoved = (self.schema as any).toJSON();
+        self.setSchema(createEmptySchema());
+        return nodeToRemoved;
+      }
+    };
+  });
+
+export interface ISchemaTreeModel extends Instance<typeof SchemaTreeModel> {}

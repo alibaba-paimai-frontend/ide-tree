@@ -5,6 +5,7 @@ import { SchemaTree, createSchemaModel } from '../src/';
 const base = id => {
   return {
     name: 'Row',
+    screenId: id,
     id: id,
     props: {
       isZebra: true,
@@ -18,6 +19,7 @@ const schema1 = {
     {
       name: 'Col',
       id: 'Col_1',
+      screenId: 'Col_1',
       children: [base('Row_2'), base('Row_3')]
     }
   ]

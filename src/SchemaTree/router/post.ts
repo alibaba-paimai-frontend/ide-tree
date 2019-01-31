@@ -1,23 +1,20 @@
-import { createSchemaModel, getAllNodes } from '../schema/util';
 import Router from 'ette-router';
+import { getAllNodes } from '../schema/util';
+import { IContext } from './helper';
+
 
 export const router = new Router();
 
-// 获取所有的节点
-(router as any).post('nodes', '/nodes', function(ctx: any) {
+// 创建新的 tree
+router.post('nodes', '/tree', function (ctx: IContext) {
   const { stores, request } = ctx;
   const { schema } = request.data;
 
   // const newSchema = createSchemaModel(schema);
-  stores.setSchema(createSchemaModel(schema));
+  stores.setSchemaTree({schema});
   // console.log('777', getAllNodes(schema, 'id'));
   const nodes = getAllNodes(schema, 'id');
   const ids = nodes.map((o: any) => o.id);
-  stores.setExpandedIds(ids);
-  // stores.schema.setName(newSchema.name);
-  // stores.schema.setId(newSchema.id);
-  // stores.schema.setChildren(newSchema.children);
-  // stores.setSchema(stores.schema);
-
+  stores.schemaTree.setExpandedIds(ids);
   ctx.response.status = 200;
 });

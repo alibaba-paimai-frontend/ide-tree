@@ -1,18 +1,33 @@
 import React, { Component } from 'react';
 import { Tree } from 'antd';
+import { observer } from 'mobx-react';
+import { traverse, NodeLikeObject } from 'ss-tree';
 import { AntTreeNodeExpandedEvent } from 'antd/es/tree';
 import { AntTreeNodeMouseEvent, AntTreeNodeSelectedEvent } from 'antd/es/tree';
-import { observer } from 'mobx-react';
-import { ISchemaObject, findById } from './schema/util';
-import { traverse } from 'ss-tree';
-import { ISchemaModel } from './schema';
-import { StoresFactory, IStoresModel } from './schema/stores';
+
+import { findById } from './schema/util';
+import {
+  ISchemaModel,
+  CONTROLLED_KEYS,
+  TSchemaTreeControlledKeys
+} from './schema';
 import { AppFactory } from './controller/index';
+import { StoresFactory, IStoresModel } from './schema/stores';
+import { pick } from '../lib/util';
+
+// 和属性编辑器直接互相传递的 schema object 接口
+export interface ISchemaProps extends NodeLikeObject {
+  id: string; // 不可以变更的 id
+  name: string; // 组件名，比如 'Row'、'Col',
+  screenId: string; // 可变更的 id,
+  parentId?: string; // 父组件 id,
+  children?: ISchemaProps[]; // 子节点对象
+}
 
 const TreeNode = Tree.TreeNode;
 
 export type SchemaTreeNodeMouseEvent = {
-  node: ISchemaObject;
+  node: ISchemaProps;
   event: {
     clientX: number;
     clientY: number;
@@ -24,19 +39,7 @@ type onExpandFunction = (
   info: AntTreeNodeExpandedEvent
 ) => void;
 
-type onSelectNodeFunction = (node: ISchemaObject) => void;
-
-interface TreeProps {
-  /**
-   * 默认被选中项的 id
-   */
-  selectedId?: string;
-
-  /**
-   * 默认展开的树节点 id
-   */
-  expandedIds?: string[];
-}
+type onSelectNodeFunction = (node: ISchemaProps) => void;
 
 export interface ISchemaTreeEvent {
   /**
@@ -53,12 +56,39 @@ export interface ISchemaTreeEvent {
   onSelectNode?: onSelectNodeFunction;
 }
 
-export interface ISchemaTreeProps extends TreeProps, ISchemaTreeEvent {
+export interface ISchemaTreeProps extends ISchemaTreeEvent {
   /**
    * 生成组件树的 schema 对象
    */
-  schema: ISchemaModel | ISchemaObject;
+  schema: ISchemaModel | ISchemaProps;
+
+  /**
+   * 默认被选中项的 id
+   */
+  selectedId?: string;
+
+  /**
+   * 默认展开的树节点 id
+   */
+  expandedIds?: string[];
 }
+
+// 空 schema 模板
+export const EMPTY_SCHEMA_ID = '-1';
+export const EMPTY_SCHEMA: ISchemaProps = {
+  name: '[init comp]',
+  id: EMPTY_SCHEMA_ID,
+  screenId: EMPTY_SCHEMA_ID
+};
+
+// 根节点标志
+export const FLAG_ROOT = '@root';
+
+export const DEFAULT_PROPS: ISchemaTreeProps = {
+  schema: EMPTY_SCHEMA,
+  selectedId: '',
+  expandedIds: []
+};
 
 // 推荐使用 decorator 的方式，否则 stories 的导出会缺少 **Prop Types** 的说明
 // 因为 react-docgen-typescript-loader 需要  named export 导出方式
@@ -74,7 +104,7 @@ export class SchemaTree extends Component<ISchemaTreeProps> {
     const id = selectedKeys && selectedKeys[0];
 
     if (!!id && onSelectNode) {
-      let node = findById(schema, id) as ISchemaObject;
+      let node = findById(schema, id) as ISchemaProps;
       onSelectNode && onSelectNode(node);
     }
   };
@@ -84,10 +114,10 @@ export class SchemaTree extends Component<ISchemaTreeProps> {
    *
    * @memberof SchemaTree
    */
-  renderTree = (root: ISchemaModel | ISchemaObject) => {
+  renderTree = (root: ISchemaModel | ISchemaProps) => {
     const treeNodeIdMap: any = {};
     let count = 0;
-    const nodes = traverse(root, (node: ISchemaObject, nodeArray: any = []) => {
+    const nodes = traverse(root, (node: ISchemaProps, nodeArray: any = []) => {
       const { name, id, parentId } = node;
       nodeArray.push({
         id: id,
@@ -140,7 +170,7 @@ export class SchemaTree extends Component<ISchemaTreeProps> {
     const clientY = (event as any).clientY;
 
     if (!!id && onRightClickNode) {
-      let node = findById(schema, id) as ISchemaObject;
+      let node = findById(schema, id) as ISchemaProps;
       onRightClickNode({ event: { clientX, clientY }, node });
     }
   };
@@ -170,19 +200,21 @@ export class SchemaTree extends Component<ISchemaTreeProps> {
 /* ----------------------------------------------------
     以下是专门配合 store 时的组件版本
 ----------------------------------------------------- */
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+
 const onExpandWithStore = (
   stores: IStoresModel,
   onExpand: onExpandFunction
 ) => (expandedKeys: string[], info: AntTreeNodeExpandedEvent) => {
-  stores.setExpandedIds(expandedKeys);
+  stores.schemaTree.setExpandedIds(expandedKeys);
   onExpand && onExpand(expandedKeys, info);
 };
 
 const onSelectNodeWithStore = (
   stores: IStoresModel,
   onSelectNode: onSelectNodeFunction
-) => (node: ISchemaObject) => {
-  stores.setSelectedId(node.id);
+) => (node: ISchemaProps) => {
+  stores.schemaTree.setSelectedId(node.id);
   onSelectNode && onSelectNode(node);
 };
 
@@ -191,13 +223,15 @@ const onSelectNodeWithStore = (
  * @param stores - store 模型实例
  */
 export const SchemaTreeAddStore = (stores: IStoresModel) =>
-  observer(function SchemaTreeWithStore(props: ISchemaTreeProps) {
+  observer(function SchemaTreeWithStore(
+    props: Omit<ISchemaTreeProps, TSchemaTreeControlledKeys>
+  ) {
     const { onExpand, onSelectNode, ...otherProps } = props;
+    const { schemaTree } = stores;
+    const controlledProps = pick(schemaTree, CONTROLLED_KEYS);
     return (
       <SchemaTree
-        schema={stores.schema}
-        selectedId={stores.selectedId}
-        expandedIds={stores.expandedIds}
+        {...controlledProps}
         onExpand={onExpandWithStore(stores, onExpand)}
         onSelectNode={onSelectNodeWithStore(stores, onSelectNode)}
         {...otherProps}

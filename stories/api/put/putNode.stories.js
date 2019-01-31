@@ -22,11 +22,11 @@ let selectedAttrName = '';
 
 function createNew() {
   const schema = treegen({});
-  client.post('/nodes', { schema: schema });
+  client.post('/tree', { schema: schema });
 }
 
 function updateRootName() {
-  client.put('/nodes/root', { name: 'name', value: 'ggggod' });
+  client.put('/tree/nodes/root', { name: 'name', value: 'ggggod' });
 }
 
 function handleChange(value) {
@@ -49,12 +49,12 @@ function updateById() {
 
   // 更新节点属性，返回更新后的数值
   client
-    .put(`/nodes/${id}`, { name: selectedAttrName, value: value })
+    .put(`/tree/nodes/${id}`, { name: selectedAttrName, value: value })
     .then(res => {
       const { status, body } = res;
       if (status === 200) {
         const isSuccess = body.success;
-        client.get(`/nodes/${id}`).then(res => {
+        client.get(`/tree/nodes/${id}`).then(res => {
           const { status, body } = res;
           if (status === 200) {
             const node = body.node || {};
@@ -75,7 +75,7 @@ function updateById() {
 }
 storiesOf('API - put', module)
   .addParameters(wInfo(mdPutNode))
-  .addWithJSX('节点：/nodes/:id 更改节点信息', () => {
+  .addWithJSX('节点：/tree/nodes/:id 更改节点信息', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>

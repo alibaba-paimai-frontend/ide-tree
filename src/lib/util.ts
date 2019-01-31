@@ -1,7 +1,7 @@
 import { generateUUIDv4 } from '@bitjourney/uuid-v4';
 
 export function uuid(len = 5) {
-    return generateUUIDv4().slice(0, len); // id 截断处理
+  return generateUUIDv4().slice(0, len); // id 截断处理
 }
 
 export function invariant(check: boolean, message: string, thing?: string) {
@@ -45,15 +45,20 @@ export function strMapToObj(strMap: Map<string, any>) {
 }
 
 export function sortNumberDesc(a: any, b: any) {
-  return parseFloat(b) - parseFloat(a)
+  return parseFloat(b) - parseFloat(a);
 }
 
 export function pick(object: any, paths: string[]) {
   const obj: any = {};
   for (const path of paths) {
     if (object[path]) {
-      obj[path] = object[path]
+      obj[path] = object[path];
     }
   }
   return obj;
-} 
+}
+
+export function capitalize(str: string) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

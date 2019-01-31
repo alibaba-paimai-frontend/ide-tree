@@ -1,28 +1,14 @@
-import { SchemaModel, ISchemaModel } from '.';
-import { invariant, uuid, pick } from '../../lib/util';
-import { map, traverse, NodeLikeObject, TRAVERSE_TYPE } from 'ss-tree';
-
-// 和属性编辑器直接互相传递的 schema object 接口
-export interface ISchemaObject extends NodeLikeObject {
-  id: string; // 可以变更的 id
-  name: string; // 组件名，比如 'Row'、'Col',
-  screenId: string; // 不可变更的 id,
-  parentId?: string; // 父组件 id,
-  props?: object; // 组件初始化的 props 对象
-  children?: ISchemaObject[]; // 子节点对象
-  ids?: string[]; // 当前 schema 中的 ids 集合/子集合
-}
-
-// 空 schema 模板
-export const EMPTY_COMP_ID = '-1';
-export const EMPTY_COMP: ISchemaObject = {
-  name: '[init comp]',
-  id: EMPTY_COMP_ID,
-  screenId: EMPTY_COMP_ID
-};
-
-// 根节点标志
-export const FLAG_ROOT = '@root';
+import {
+  SchemaModel,
+  ISchemaModel,
+  ISchemaTreeModel,
+  SchemaTreeModel
+} from './index';
+import { invariant, uuid, pick, capitalize } from '../../lib/util';
+import { debugModel } from '../../lib/debug';
+import { map, traverse, TRAVERSE_TYPE } from 'ss-tree';
+import { IStoresModel } from './stores';
+import { DEFAULT_PROPS, ISchemaProps, ISchemaTreeProps } from '../index';
 
 // 列举 schema 中特殊的字段名，一般是可以根据现有 schema 计算出来的属性，不需要硬编码
 // 而诸如 props、fetch 等字段，需要存储起来
@@ -70,10 +56,10 @@ function replacer(key: string, value: any) {
  * 将普通的 schema 对象转换成字符串形式
  * 转换过程中，将使用 replacer 函数将 schema 中的特殊属性 “剔除掉”
  * @export
- * @param {ISchemaObject} schema
+ * @param {ISchemaProps} schema
  * @returns
  */
-export function stringifyAttribute(schema: ISchemaObject) {
+export function stringifyAttribute(schema: ISchemaProps) {
   return JSON.stringify(schema, replacer);
 }
 
@@ -82,33 +68,32 @@ export function stringifyAttribute(schema: ISchemaObject) {
  * 具体操作是：利用树遍历算法生成组件模型
  *
  * @export
- * @param {ISchemaObject} schema
+ * @param {ISchemaProps} schema
  * @returns {ISchemaModel}
  */
-export function createSchemaModel(schema: any): ISchemaModel {
-  invariant(!!schema, 'schema 对象不能为空');
-  invariant(!!schema.name, 'schema 对象缺少 `name` 属性');
-  // invariant(isSchemaObject(schema), 'schema 对象不符合规范');
-  // return comp;
+export function createSchemaModel(
+  schema: ISchemaProps = DEFAULT_PROPS.schema
+): ISchemaModel {
+  const mergedSchema = Object.assign({}, DEFAULT_PROPS.schema, schema);
 
   // 传递给 map 函数的对象，必须具备 `children` 属性，否则没法迭代
-  if (!schema.children) {
-    schema.children = [];
+  if (!mergedSchema.children) {
+    mergedSchema.children = [];
   }
 
   return map(
-    schema,
+    mergedSchema,
     (node: any) => {
       // 设置属性
       const newSchema = SchemaModel.create({
         id:
-          (<ISchemaObject>node).id ||
-          genCompIdByName((<ISchemaObject>node).name, false, true),
+          (<ISchemaProps>node).id ||
+          genCompIdByName((<ISchemaProps>node).name, false, true),
         screenId:
-          (<ISchemaObject>node).screenId ||
-          genCompIdByName((<ISchemaObject>node).name),
-        name: (<ISchemaObject>node).name, // 组件名
-        attrs: stringifyAttribute(<ISchemaObject>node)
+          (<ISchemaProps>node).screenId ||
+          genCompIdByName((<ISchemaProps>node).name),
+        name: (<ISchemaProps>node).name, // 组件名
+        attrs: stringifyAttribute(<ISchemaProps>node)
       });
       return newSchema;
     },
@@ -125,11 +110,27 @@ export function createSchemaModel(schema: any): ISchemaModel {
  * @export
  * @returns
  */
-export function createEmptyModel() {
-  return createSchemaModel(EMPTY_COMP);
+export function createEmptySchema() {
+  return createSchemaModel();
 }
 
-type SchemaOrModel = ISchemaModel | ISchemaObject;
+export function createSchemaTreeModel(
+  modelObject: ISchemaTreeProps = DEFAULT_PROPS
+) {
+  const mergedProps = Object.assign({}, DEFAULT_PROPS, modelObject);
+  const { schema, selectedId, expandedIds } = mergedProps;
+  return SchemaTreeModel.create({
+    schema,
+    selectedId,
+    expandedIds
+  });
+}
+
+export function createEmptySchemaTreeModel() {
+  return createSchemaTreeModel();
+}
+
+type SchemaOrModel = ISchemaModel | ISchemaProps;
 /**
  * 从当前的 schema 中提取出所有的节点；按广度遍历
  *
@@ -143,7 +144,7 @@ export function getAllNodes(
 ) {
   const filters = [].concat(filterArray || []); // 使用逗号隔开
   return traverse(
-    model as ISchemaObject,
+    model as ISchemaProps,
     (node: any, lastResult: SchemaOrModel[] = []) => {
       lastResult.push(filters.length ? pick(node, filters) : node);
       return lastResult;
@@ -155,22 +156,22 @@ export function getAllNodes(
  * 根据节点 id 找到到子 Model 实例
  *
  * @export
- * @param {(ISchemaModel | ISchemaObject)} model - 根节点
+ * @param {(ISchemaModel | ISchemaProps)} model - 根节点
  * @param {string} id - 想要查找的节点 id
  * @returns {(ISchemaModel | null)}
  */
 export function findById(
-  model: ISchemaModel | ISchemaObject,
+  model: ISchemaModel | ISchemaProps,
   id: string,
   filterArray?: string | string[]
-): ISchemaModel | ISchemaObject | null {
+): ISchemaModel | ISchemaProps | null {
   if (!id) return null;
 
   let modelNode = null;
   const filters = [].concat(filterArray || []); // 使用逗号隔开
 
   traverse(
-    model as ISchemaObject,
+    model as ISchemaProps,
     (node: any) => {
       if (node.id === id) {
         modelNode = filters.length ? pick(node, filters) : node;
@@ -188,38 +189,33 @@ export function findById(
 /* ----------------------------------------------------
     更新节点信息
 ----------------------------------------------------- */
-// 定义可更新信息的属性，目前只有 3 个
-enum EDITABLE_ATTRIBUTE {
-  SCREENID = 'screenId',
-  NAME = 'name',
-  ATTRS = 'attrs'
-}
-
-const EDITABLE_ATTRIBUTE_VALUES = Object.values(EDITABLE_ATTRIBUTE);
-
-export function updateNode(
-  node: ISchemaModel,
+const update = (valueSet: string[]) => (
+  item: ISchemaModel | ISchemaTreeModel | IStoresModel,
   attrName: string,
-  value: string | object
-): boolean {
+  value: any
+): boolean => {
+  invariant(!!item, '入参 item 必须存在');
   // 如果不是可更新的属性，那么将返回 false
-  if (!EDITABLE_ATTRIBUTE_VALUES.includes(attrName)) {
+  if (!valueSet.includes(attrName)) {
+    debugModel(
+      `[更新属性] 属性名 ${attrName} 不属于可更新范围，无法更新成 ${value} 值；（附:可更新属性列表：${valueSet}）`
+    );
     return false;
   }
 
-  switch (attrName) {
-    case EDITABLE_ATTRIBUTE.SCREENID:
-      node.setScreenId('' + value);
-      break;
-    case EDITABLE_ATTRIBUTE.NAME:
-      node.setName('' + value);
-      break;
-    case EDITABLE_ATTRIBUTE.ATTRS:
-      node.setAttrs(value);
-      break;
-    default:
-      return false;
-  }
+  const functionName = `set${capitalize(attrName)}`; // 比如 attrName 是 `type`, 则调用 `setType` 方法
+  (item as any)[functionName](value);
   return true;
-}
-// ==============================
+};
+
+// 定义 panel 可更新信息的属性
+const SCHEMA_EDITABLE_ATTRIBUTE = ['name', 'screenId', 'attrs'];
+export const updateSchema = update(SCHEMA_EDITABLE_ATTRIBUTE);
+
+// 定义 panel 可更新信息的属性
+const SCHEMATREE_EDITABLE_ATTRIBUTE = ['schema', 'selectedId', 'expandedIds'];
+export const updateSchemaTree = update(SCHEMATREE_EDITABLE_ATTRIBUTE);
+
+// 定义 stores 可更新信息的属性
+const STORES_EDITABLE_ATTRIBUTE = ['schemaTree'];
+export const updateStoresAttribute = update(STORES_EDITABLE_ATTRIBUTE);
