@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.4"></a>
+## [2.0.4](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.3...v2.0.4) (2019-02-11)
+
+
+### Features
+
+* **功能调整:** 新增 store id；调整 umd 的 library name；调整成 otherProps； ([1ee2af8](https://github.com/alibaba-paimai-frontend/ide-tree/commit/1ee2af8))
+
+
+
 <a name="2.0.3"></a>
 ## [2.0.3](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.2...v2.0.3) (2018-12-26)
 
