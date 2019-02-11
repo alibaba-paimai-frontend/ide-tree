@@ -352,7 +352,7 @@ export const SchemaTreeModel = types
        * 重置 schema，相当于创建空树
        * 影响范围：整棵树
        */
-      resetToEmpty() {
+      resetToEmptyTree() {
         const nodeToRemoved = (self.schema as any).toJSON();
         self.setSchema(createEmptySchema());
         return nodeToRemoved;

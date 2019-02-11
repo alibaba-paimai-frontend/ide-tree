@@ -34,7 +34,7 @@ function removeNodeById() {
   }
 
   // 移除指定节点
-  client.del(`/tree/nodes/${id}`).then(res => {
+  client.del(`/nodes/${id}`).then(res => {
     const { status, body } = res;
     if (status === 200) {
       const node = body.node || {};
@@ -47,7 +47,7 @@ function removeNodeById() {
 }
 storiesOf('API - del', module)
   .addParameters(wInfo(mdDelNode))
-  .addWithJSX('节点：/tree/nodes/:id 移除指定节点', () => {
+  .addWithJSX('节点：/nodes/:id 移除指定节点', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>

@@ -32,7 +32,7 @@ const styles = {
 let nodes = [];
 
 const getNodeInfo = client => () => {
-  client.get('/tree/nodes?filter=id,attrs').then(res => {
+  client.get('/nodes?filter=id,attrs').then(res => {
     const { status, body } = res;
     if (status === 200) {
       nodes = body.nodes;
@@ -49,7 +49,7 @@ const createNew = client => () => {
 
 const getById = client => () => {
   const id = document.getElementById('nodeId').value;
-  client.get(`/tree/nodes/${id}`).then(res => {
+  client.get(`/nodes/${id}`).then(res => {
     const { status, body } = res;
     if (status === 200) {
       const node = body.node || {};
@@ -62,11 +62,11 @@ const getById = client => () => {
   });
 
   // 同时选中那个节点
-  client.put(`/tree/selection/${id}`);
+  client.put(`/selection/${id}`);
 };
 storiesOf('API - get（schema隔离）', module)
   .addParameters(wInfo(mdGetNode))
-  .addWithJSX('节点：/tree/nodes 获取所有节点（独立的schema上下文）', () => {
+  .addWithJSX('节点：/nodes 获取所有节点（独立的schema上下文）', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>
@@ -83,7 +83,7 @@ storiesOf('API - get（schema隔离）', module)
       </Row>
     );
   })
-  .addWithJSX('节点：/tree/nodes/:id 获取指定节点信息（独立的schema上下文）', () => {
+  .addWithJSX('节点：/nodes/:id 获取指定节点信息（独立的schema上下文）', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>
@@ -108,7 +108,7 @@ storiesOf('API - get（schema隔离）', module)
 
 storiesOf('API - get（schema非隔离）', module)
   .addParameters(wInfo(mdGetNode))
-  .addWithJSX('节点：/tree/nodes 获取所有节点（schema共享）', () => {
+  .addWithJSX('节点：/nodes 获取所有节点（schema共享）', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>
@@ -125,7 +125,7 @@ storiesOf('API - get（schema非隔离）', module)
       </Row>
     );
   })
-  .addWithJSX('节点：/tree/nodes/:id 获取指定节点信息（schema共享）', () => {
+  .addWithJSX('节点：/nodes/:id 获取指定节点信息（schema共享）', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>

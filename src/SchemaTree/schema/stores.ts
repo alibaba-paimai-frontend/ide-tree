@@ -1,6 +1,6 @@
 import { types, SnapshotOrInstance, Instance, cast } from 'mobx-state-tree';
 import { updateStoresAttribute, createEmptySchemaTreeModel } from './util';
-import {  SchemaTreeModel } from './index';
+import { SchemaTreeModel } from './index';
 import { debugInteract } from '../../lib/debug';
 
 export const STORE_ID_PREIX = 'sst_';
@@ -34,7 +34,7 @@ export const Stores = types
        * 影响范围：整棵树
        */
       resetToEmpty() {
-        self.setSchemaTree(createEmptySchemaTreeModel());
+        return self.schemaTree.resetToEmptyTree();
       }
     };
   });
