@@ -14,6 +14,7 @@ import {
 import { AppFactory } from './controller/index';
 import { StoresFactory, IStoresModel } from './schema/stores';
 import { pick } from '../lib/util';
+import { debugRender } from '../lib/debug';
 
 // 和属性编辑器直接互相传递的 schema object 接口
 export interface ISchemaProps extends NodeLikeObject {
@@ -94,6 +95,7 @@ export const DEFAULT_PROPS: ISchemaTreeProps = {
 // 因为 react-docgen-typescript-loader 需要  named export 导出方式
 @observer
 export class SchemaTree extends Component<ISchemaTreeProps> {
+  static displayName = 'SchemaTree';
   constructor(props: ISchemaTreeProps) {
     super(props);
     this.state = {};
@@ -222,13 +224,15 @@ const onSelectNodeWithStore = (
  * 科里化创建 SchemaTreeWithStore 组件
  * @param stores - store 模型实例
  */
-export const SchemaTreeAddStore = (stores: IStoresModel) =>
-  observer(function SchemaTreeWithStore(
+export const SchemaTreeAddStore = (stores: IStoresModel) => {
+  
+  function SchemaTreeWithStore(
     props: Omit<ISchemaTreeProps, TSchemaTreeControlledKeys>
   ) {
     const { onExpand, onSelectNode, ...otherProps } = props;
     const { schemaTree } = stores;
     const controlledProps = pick(schemaTree, CONTROLLED_KEYS);
+    debugRender(`[${stores.id}] rendering`);
     return (
       <SchemaTree
         {...controlledProps}
@@ -237,7 +241,11 @@ export const SchemaTreeAddStore = (stores: IStoresModel) =>
         {...otherProps}
       />
     );
-  });
+  }
+  SchemaTreeWithStore.displayName = 'SchemaTreeWithStore';
+  return observer(SchemaTreeWithStore);
+};
+
 /**
  * 工厂函数，每调用一次就获取一副 MVC
  * 用于隔离不同的 SchemaTreeWithStore 的上下文
