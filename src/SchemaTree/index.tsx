@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Tree } from 'antd';
-import { observer } from 'mobx-react';
+import { observer } from 'mobx-react-lite';
 import { traverse, NodeLikeObject } from 'ss-tree';
 import { AntTreeNodeExpandedEvent } from 'antd/es/tree';
 import { AntTreeNodeMouseEvent, AntTreeNodeSelectedEvent } from 'antd/es/tree';
@@ -91,95 +91,96 @@ export const DEFAULT_PROPS: ISchemaTreeProps = {
   expandedIds: []
 };
 
-// 推荐使用 decorator 的方式，否则 stories 的导出会缺少 **Prop Types** 的说明
-// 因为 react-docgen-typescript-loader 需要  named export 导出方式
-@observer
-export class SchemaTree extends Component<ISchemaTreeProps> {
-  static displayName = 'SchemaTree';
-  constructor(props: ISchemaTreeProps) {
-    super(props);
-    this.state = {};
-  }
+interface ISubComponents {
+  // SchemaTreeComponent: React.ComponentType<OptionalSchemaTreeProps>;
+}
+/**
+ * 使用高阶组件打造的组件生成器
+ * @param subComponents - 子组件列表
+ */
+export const SchemaTreeHOC = (subComponents: ISubComponents) => {
+  const SchemaTreeHOC = (props: ISchemaTreeProps = DEFAULT_PROPS) => {
+    // const { SchemaTreeComponent } = subComponents;
+    const mergedProps = Object.assign({}, DEFAULT_PROPS, props);
+    const { schema, selectedId, expandedIds = [], onExpand } = mergedProps;
+    const keys = expandedIds.slice();
 
-  onSelectNode = (selectedKeys: any, info: AntTreeNodeSelectedEvent) => {
-    const { onSelectNode, schema } = this.props;
-    const id = selectedKeys && selectedKeys[0];
+    const onSelectNode = (selectedKeys: any, info: AntTreeNodeSelectedEvent) => {
+      const { onSelectNode, schema } = props;
+      const id = selectedKeys && selectedKeys[0];
 
-    if (!!id && onSelectNode) {
-      let node = findById(schema, id) as ISchemaProps;
-      onSelectNode && onSelectNode(node);
-    }
-  };
+      if (!!id && onSelectNode) {
+        let node = findById(schema, id) as ISchemaProps;
+        onSelectNode && onSelectNode(node);
+      }
+    };
 
-  /**
-   * 非递归生成组件树结构
-   *
-   * @memberof SchemaTree
-   */
-  renderTree = (root: ISchemaModel | ISchemaProps) => {
-    const treeNodeIdMap: any = {};
-    let count = 0;
-    const nodes = traverse(root, (node: ISchemaProps, nodeArray: any = []) => {
-      const { name, id, parentId } = node;
-      nodeArray.push({
-        id: id,
-        name: name,
-        component: <TreeNode title={name} key={id} />,
-        parentId: parentId
+
+    /**
+     * 非递归生成组件树结构
+     *
+     * @memberof SchemaTree
+     */
+    const renderTree = (root: ISchemaModel | ISchemaProps) => {
+      const treeNodeIdMap: any = {};
+      let count = 0;
+      const nodes = traverse(root, (node: ISchemaProps, nodeArray: any = []) => {
+        const { name, id, parentId } = node;
+        nodeArray.push({
+          id: id,
+          name: name,
+          component: <TreeNode title={name} key={id} />,
+          parentId: parentId
+        });
+
+        treeNodeIdMap[id] = count; // 倒序索引
+        count++;
+
+        return nodeArray;
       });
 
-      treeNodeIdMap[id] = count; // 倒序索引
-      count++;
+      // 逆序遍历，将节点 reduce 成单个节点
+      // 主要是依赖
+      for (let i = count; i > 0; i--) {
+        const currentNode = nodes[i - 1];
+        if (currentNode && currentNode.parentId) {
+          const targetNodeIndex = treeNodeIdMap[currentNode.parentId];
+          const targetNode = nodes[targetNodeIndex]; // 方向索引出目标节点
 
-      return nodeArray;
-    });
+          // 目标节点组件
+          const component = targetNode.component;
+          const { name, id } = targetNode;
+          const { children } = component.props;
 
-    // 逆序遍历，将节点 reduce 成单个节点
-    // 主要是依赖
-    for (let i = count; i > 0; i--) {
-      const currentNode = nodes[i - 1];
-      if (currentNode && currentNode.parentId) {
-        const targetNodeIndex = treeNodeIdMap[currentNode.parentId];
-        const targetNode = nodes[targetNodeIndex]; // 方向索引出目标节点
-
-        // 目标节点组件
-        const component = targetNode.component;
-        const { name, id } = targetNode;
-        const { children } = component.props;
-
-        // 将当前节点 append 到父节点上
-        const newChild = children
-          ? children.concat(currentNode.component)
-          : [currentNode.component];
-        // 重新构造父节点
-        targetNode.component = (
-          <TreeNode title={name} key={id}>
-            {newChild}
-          </TreeNode>
-        );
+          // 将当前节点 append 到父节点上
+          const newChild = children
+            ? children.concat(currentNode.component)
+            : [currentNode.component];
+          // 重新构造父节点
+          targetNode.component = (
+            <TreeNode title={name} key={id}>
+              {newChild}
+            </TreeNode>
+          );
+        }
       }
-    }
-    return nodes[0].component;
-  };
+      return nodes[0].component;
+    };
 
-  onRightClick = (option: AntTreeNodeMouseEvent) => {
-    const { node, event } = option;
-    const { schema, onRightClickNode } = this.props;
-    let id = node.props.eventKey; // key就是他
+    const onRightClick = (option: AntTreeNodeMouseEvent) => {
+      const { node, event } = option;
+      const { schema, onRightClickNode } = props;
+      let id = node.props.eventKey; // key就是他
 
-    // 注意 Event looping 特性，所需要的事件属性需要事先取出来
-    const clientX = (event as any).clientX;
-    const clientY = (event as any).clientY;
+      // 注意 Event looping 特性，所需要的事件属性需要事先取出来
+      const clientX = (event as any).clientX;
+      const clientY = (event as any).clientY;
 
-    if (!!id && onRightClickNode) {
-      let node = findById(schema, id) as ISchemaProps;
-      onRightClickNode({ event: { clientX, clientY }, node });
-    }
-  };
-
-  render() {
-    const { schema, selectedId, expandedIds = [], onExpand } = this.props;
-    const keys = expandedIds.slice();
+      if (!!id && onRightClickNode) {
+        let node = findById(schema, id) as ISchemaProps;
+        onRightClickNode({ event: { clientX, clientY }, node });
+      }
+    };
 
     return (
       <Tree
@@ -190,14 +191,23 @@ export class SchemaTree extends Component<ISchemaTreeProps> {
         onExpand={onExpand}
         expandedKeys={keys}
         selectedKeys={[selectedId]}
-        onSelect={this.onSelectNode}
-        onRightClick={this.onRightClick}
+        onSelect={onSelectNode}
+        onRightClick={onRightClick}
       >
-        {this.renderTree(schema)}
+        {renderTree(schema)}
       </Tree>
     );
-  }
-}
+
+
+  };
+  SchemaTreeHOC.displayName = 'SchemaTreeHOC';
+  return observer(SchemaTreeHOC);
+};
+
+// 采用高阶组件方式生成普通的 SchemaTree 组件
+export const SchemaTree = SchemaTreeHOC({
+  // SchemaTreeComponent: SchemaTree,
+});
 
 /* ----------------------------------------------------
     以下是专门配合 store 时的组件版本
@@ -226,9 +236,9 @@ const onSelectNodeWithStore = (
  */
 export const SchemaTreeAddStore = (stores: IStoresModel) => {
   
-  function SchemaTreeWithStore(
+  const SchemaTreeWithStore = (
     props: Omit<ISchemaTreeProps, TSchemaTreeControlledKeys>
-  ) {
+  ) => {
     const { onExpand, onSelectNode, ...otherProps } = props;
     const { schemaTree } = stores;
     const controlledProps = pick(schemaTree, CONTROLLED_KEYS);
