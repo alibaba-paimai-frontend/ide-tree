@@ -4,10 +4,11 @@ import {
   IAnyModelType,
   Instance,
   SnapshotOrInstance,
-  cast
+  cast,
+  detach
 } from 'mobx-state-tree';
 import { debugModel, debugInteract } from '../../lib/debug';
-import { invariant, sortNumberDesc, pick } from '../../lib/util';
+import { invariant, sortNumberDesc, pick, isExist } from '../../lib/util';
 import {
   stringifyAttribute,
   findById,
@@ -207,6 +208,22 @@ export const SchemaModel = types
       }
     };
   })
+  // 新增操作
+  .actions(self=>{
+    return{
+      /**
+        * 新增直系节点，简单的 append
+        * 影响属性：children
+        */
+      addChildren: (nodeOrNodeArray: ISchemaModel | ISchemaModel[]) => {
+        const nodes = [].concat(nodeOrNodeArray);
+        nodes.forEach(node => {
+          node.setParentId(self.id);
+          self.children.push(node);
+        });
+      }
+    }
+  })
   // 删除操作
   .actions(self => {
     return {
@@ -229,15 +246,27 @@ export const SchemaModel = types
     return {
       /**
        * 新增直系节点
+       * 新增单个直系节点到指定位置，操作稍微复杂
        * 影响属性：children
+       * @param {number} targetIndex - 指定插入的位置，该 `targetIndex` 插入的行为和 Array.splice 方法类似
        */
-      addChildren: (nodeOrNodeArray: ISchemaModel | ISchemaModel[]) => {
-        const nodes = [].concat(nodeOrNodeArray);
-        nodes.forEach(node => {
-          node.setParentId(self.id);
-          self.children.push(node);
-        });
+      addChild: (insertedNode: ISchemaModel, targetIndex?: number) => {
+        const currentLen = self.children.length;
+
+        // 无子节点的情况
+        if (!currentLen) {
+          self.addChildren(insertedNode);
+          return;
+        }
+
+        // 注意：要将 targetIndex 转换成数字
+        let resultIndex = isExist(targetIndex) ? + targetIndex : currentLen;
+        // const originChildren = self.children.toJSON();
+        insertedNode.setParentId(self.id);
+        self.children.splice(resultIndex, 0, insertedNode);
+
       },
+
       /**
        * 根据 id 删除直系节点，如果想要整个重置 children，请使用 `setChildren` 方法
        * 影响属性：children

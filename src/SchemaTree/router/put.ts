@@ -7,7 +7,7 @@ export const router = new Router();
 router.put('nodes', '/tree/root', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { name, value } = request.data;
-  const isSuccess = stores.schemaTree.schema.updateAttribute(name, value);
+  const isSuccess = stores.model.schema.updateAttribute(name, value);
   ctx.response.body = {
     success: isSuccess
   };
@@ -21,7 +21,7 @@ router.put('nodes', '/nodes/:id', function(ctx: IContext) {
   const { id } = ctx.params;
 
   //   stores.setSchema(createSchemaModel(schema));
-  const isSuccess = stores.schemaTree.schema.updateAttributeById(id, name, value);
+  const isSuccess = stores.model.schema.updateAttributeById(id, name, value);
   ctx.response.body = {
     success: isSuccess
   };
@@ -35,10 +35,10 @@ router.put('nodes', '/selection/:id', function(ctx: IContext) {
   const { id } = params;
 
   // stores.setSchema(createSchemaModel(schema));
-  stores.schemaTree.setSelectedId(id);
+  stores.model.setSelectedId(id);
 
   // 自动展开看到当前节点
-  stores.schemaTree.autoExpandIdIntoView(id);
+  stores.model.autoExpandIdIntoView(id);
 
   ctx.response.status = 200;
 });

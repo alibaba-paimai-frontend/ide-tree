@@ -11,7 +11,7 @@ router.get('nodes', '/nodes', function(ctx: IContext) {
   const { query } = request;
   const filterArray = query && query.filter && query.filter.trim().split(',');
   ctx.response.body = {
-    nodes: stores.schemaTree.schema.allNodesWithFilter(filterArray)
+    nodes: stores.model.schema.allNodesWithFilter(filterArray)
   };
   ctx.response.status = 200;
 });
@@ -23,7 +23,7 @@ router.get('nodes', '/nodes/:id', function(ctx: IContext) {
   const { id } = ctx.params;
   const filterArray = query && query.filter && query.filter.trim().split(',');
   ctx.response.body = {
-    node: findById(stores.schemaTree.schema, id, filterArray)
+    node: findById(stores.model.schema, id, filterArray)
   };
   ctx.response.status = 200;
 });

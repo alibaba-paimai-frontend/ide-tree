@@ -17,9 +17,9 @@ router.del('nodes', '/nodes/:id', function(ctx: IContext) {
   const { id } = params;
   // 这里有个特殊情况，如果 id 是根节点的 id，需要调用 `resetToEmpty` 方法
   const result =
-    id === stores.schemaTree.schema.id
+    id === stores.model.schema.id
       ? stores.resetToEmpty()
-      : stores.schemaTree.schema.removeNode(id);
+      : stores.model.schema.removeNode(id);
 
   ctx.response.body = {
     node: result

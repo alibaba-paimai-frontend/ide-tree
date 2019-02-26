@@ -133,7 +133,7 @@ export const SchemaTreeHOC = (subComponents: ISubComponents) => {
           parentId: parentId
         });
 
-        treeNodeIdMap[id] = count; // 倒序索引
+        treeNodeIdMap[id] = count; // 生成字典索引，根据 id 能查阅到节点索引位置
         count++;
 
         return nodeArray;
@@ -145,17 +145,18 @@ export const SchemaTreeHOC = (subComponents: ISubComponents) => {
         const currentNode = nodes[i - 1];
         if (currentNode && currentNode.parentId) {
           const targetNodeIndex = treeNodeIdMap[currentNode.parentId];
-          const targetNode = nodes[targetNodeIndex]; // 方向索引出目标节点
+          const targetNode = nodes[targetNodeIndex]; // 方向索引出目标节点，当前父节点
 
           // 目标节点组件
           const component = targetNode.component;
           const { name, id } = targetNode;
           const { children } = component.props;
 
-          // 将当前节点 append 到父节点上
-          const newChild = children
-            ? children.concat(currentNode.component)
-            : [currentNode.component];
+          // 将当前节点 append 到父节点上，注意由于是逆序操作，所以后操作的节点要放在之前节点之前
+          const newChild = [currentNode.component].concat(children || []);
+
+          // 如果 newChild 长度大于 1 ，需要重新逆序排序
+
           // 重新构造父节点
           targetNode.component = (
             <TreeNode title={name} key={id}>
@@ -218,7 +219,7 @@ const onExpandWithStore = (
   stores: IStoresModel,
   onExpand: onExpandFunction
 ) => (expandedKeys: string[], info: AntTreeNodeExpandedEvent) => {
-  stores.schemaTree.setExpandedIds(expandedKeys);
+  stores.model.setExpandedIds(expandedKeys);
   onExpand && onExpand(expandedKeys, info);
 };
 
@@ -226,7 +227,7 @@ const onSelectNodeWithStore = (
   stores: IStoresModel,
   onSelectNode: onSelectNodeFunction
 ) => (node: ISchemaProps) => {
-  stores.schemaTree.setSelectedId(node.id);
+  stores.model.setSelectedId(node.id);
   onSelectNode && onSelectNode(node);
 };
 
@@ -240,8 +241,8 @@ export const SchemaTreeAddStore = (stores: IStoresModel) => {
     props: Omit<ISchemaTreeProps, TSchemaTreeControlledKeys>
   ) => {
     const { onExpand, onSelectNode, ...otherProps } = props;
-    const { schemaTree } = stores;
-    const controlledProps = pick(schemaTree, CONTROLLED_KEYS);
+    const { model } = stores;
+    const controlledProps = pick(model, CONTROLLED_KEYS);
     debugRender(`[${stores.id}] rendering`);
     return (
       <SchemaTree

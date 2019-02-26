@@ -11,12 +11,12 @@ export const Stores = types
       types.identifier,
       identifier => identifier.indexOf(STORE_ID_PREIX) === 0
     ),
-    schemaTree: SchemaTreeModel
+    model: SchemaTreeModel
   })
   .actions(self => {
     return {
-      setSchemaTree(model: SnapshotOrInstance<typeof self.schemaTree>) {
-        self.schemaTree = cast(model);
+      setModel(model: SnapshotOrInstance<typeof self.model>) {
+        self.model = cast(model);
       }
     };
   })
@@ -34,7 +34,7 @@ export const Stores = types
        * 影响范围：整棵树
        */
       resetToEmpty() {
-        return self.schemaTree.resetToEmptyTree();
+        return self.model.resetToEmptyTree();
       }
     };
   });
@@ -48,6 +48,6 @@ let autoId = 1;
 export function StoresFactory(): IStoresModel {
   return Stores.create({
     id: `${STORE_ID_PREIX}${autoId++}`,
-    schemaTree: createEmptySchemaTreeModel() as any
+    model: createEmptySchemaTreeModel() as any
   });
 }
