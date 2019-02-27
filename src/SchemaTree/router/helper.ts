@@ -1,5 +1,6 @@
 import { IStoresModel } from '../schema/stores';
-export interface IContext {
+import { IContext as IEtteContext } from 'ette';
+export interface IContext extends IEtteContext{
   stores: IStoresModel;
   [propName: string]: any;
 }

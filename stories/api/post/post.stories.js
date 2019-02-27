@@ -28,7 +28,7 @@ function insertUnderRoot() {
 }
 
 
-function insertNew() {
+const insertNew = (type = 'CHILD') => () => {
   const id = document.getElementById('nodeId').value;
   if (!id) {
     document.getElementById('info').innerText = '请输入节点 id';
@@ -38,9 +38,21 @@ function insertNew() {
   const value = document.getElementById('targeValue').value;
   const targetIndex = document.getElementById('targetIndex').value;
 
+  let api = `/nodes/${id}/children`;
+  switch (type) {
+    case 'CHILD':
+      api = `/nodes/${id}/children`
+      break;
+    case 'SIB':
+      api = `/nodes/${id}/sibling`
+      break;
+    default:
+      break;
+  }
+
   // 更新节点属性，返回更新后的数值
   client
-    .post(`/nodes/${id}/children`, { schema: JSON.parse(value), targetIndex: targetIndex })
+    .post(api, Object.assign({ schema: JSON.parse(value) }, type === 'CHILD' ? { targetIndex: targetIndex} : {offset: targetIndex}))
     .then(res => {
       const { status, body } = res;
       if (status === 200) {
@@ -83,7 +95,8 @@ storiesOf('API - post', module)
               <Input placeholder="插入后子节点位置" id="targetIndex" />
             </Col>
             <Col span={8}>
-              <Button onClick={insertNew}>插入节点</Button>
+              <Button onClick={insertNew('CHILD')}>插成子节点</Button>
+              <Button onClick={insertNew('SIB')}>插成兄弟节点</Button>
               <Button onClick={insertUnderRoot}>在根节点下插入</Button>
               <Button onClick={createNew}>创建随机树</Button>
             </Col>

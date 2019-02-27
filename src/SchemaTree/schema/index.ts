@@ -7,8 +7,10 @@ import {
   cast,
   detach
 } from 'mobx-state-tree';
+import { invariant, pick, isExist } from 'ide-lib-utils';
+
+import { sortNumberDesc } from '../../lib/util';
 import { debugModel, debugInteract } from '../../lib/debug';
-import { invariant, sortNumberDesc, pick, isExist } from '../../lib/util';
 import {
   stringifyAttribute,
   findById,
@@ -78,7 +80,16 @@ export const SchemaModel = types
        */
       get allNodes() {
         return getAllNodes(self as ISchemaModel);
+      },
+
+      /**
+       * 是否是根节点
+       * 依赖属性：parentId
+       */
+      get isRoot() {
+        return !!self.parentId;
       }
+
     };
   })
   .views(self => {
@@ -93,7 +104,7 @@ export const SchemaModel = types
        * 根据 id 定位到直系子节点的索引值；
        * 即，返回子节点中指定 id 对应的节点位置
        */
-      indexOfChildren(id: string) {
+      indexOfChild(id: string): number {
         if (!id) {
           return -1;
         }
@@ -267,6 +278,7 @@ export const SchemaModel = types
 
       },
 
+
       /**
        * 根据 id 删除直系节点，如果想要整个重置 children，请使用 `setChildren` 方法
        * 影响属性：children
@@ -303,6 +315,41 @@ export const SchemaModel = types
         );
       }
     };
+  })
+  // 基于上述基础 api 封装的较高层级 API
+  .actions(self=>{
+    return {
+      /**
+      * 给当前（孙）子节点新增单个兄弟节点到指定位置
+      * offset 指定偏移量，0 表示自己的前一个位置，1 表示自己的后一个位置，以此类推
+      * 备注：进行这种操作的前提条件是 subNode 存在父节点
+      * 影响属性：父节点下的 children
+      * @param {number} targetIndex - 指定插入的位置，该 `targetIndex` 插入的行为和 Array.splice 方法类似
+      */
+      addSibling: (subNode: ISchemaModel, insertedNode: ISchemaModel, offset: number | string = 0): boolean => {
+
+        if (!isExist(subNode.parentId)) {
+          debugModel(`[addSibling]节点 ${subNode.id} 无父元素，无法进行新增兄弟节点的操作`);
+          return false;
+        }
+
+        const parentNode = self.findNode(subNode.parentId) as ISchemaModel; // 找到该 subNode 的父节点
+        if(!parentNode) {
+          debugModel(`[addSibling] 当前节点 ${self.id} 中无 ${subNode.parentId} 节点，按理说不应出现这种异常状态，请检查树形结构合理性`);
+          return false;
+        }
+
+        // 找到要插入节点在 parentModel 的 child 位置
+        const nodeIndex = parentNode.indexOfChild(subNode.id);
+        const targetIndex = parseInt(offset as string) + nodeIndex;
+        debugModel(`[addSibling]计算插入位置：${nodeIndex} + ${offset}= ${targetIndex}`);
+        // 调用上一层 api 完成该项功能，注意这里的 offset 是字符
+        self.addChild(insertedNode, + targetIndex);
+
+        return true;
+      },
+    }
+  
   });
 
 export interface ISchemaModel extends Instance<typeof SchemaModel> {}

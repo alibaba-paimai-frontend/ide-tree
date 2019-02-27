@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { traverse, NodeLikeObject } from 'ss-tree';
 import { AntTreeNodeExpandedEvent } from 'antd/es/tree';
 import { AntTreeNodeMouseEvent, AntTreeNodeSelectedEvent } from 'antd/es/tree';
+import { pick } from 'ide-lib-utils';
 
 import { findById } from './schema/util';
 import {
@@ -13,7 +14,6 @@ import {
 } from './schema';
 import { AppFactory } from './controller/index';
 import { StoresFactory, IStoresModel } from './schema/stores';
-import { pick } from '../lib/util';
 import { debugRender } from '../lib/debug';
 
 // 和属性编辑器直接互相传递的 schema object 接口

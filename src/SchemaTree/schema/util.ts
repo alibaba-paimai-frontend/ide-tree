@@ -4,7 +4,10 @@ import {
   ISchemaTreeModel,
   SchemaTreeModel
 } from './index';
-import { invariant, uuid, pick, capitalize } from '../../lib/util';
+import { invariant, pick, capitalize } from 'ide-lib-utils';
+
+
+import { uuid } from '../../lib/util';
 import { debugModel } from '../../lib/debug';
 import { map, traverse, TRAVERSE_TYPE } from 'ss-tree';
 import { IStoresModel } from './stores';
