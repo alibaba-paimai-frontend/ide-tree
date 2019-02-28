@@ -4,14 +4,15 @@ import {
   ISchemaTreeModel,
   SchemaTreeModel
 } from './index';
-import { invariant, pick, capitalize } from 'ide-lib-utils';
+import { invariant, pick} from 'ide-lib-utils';
+import { updateInScope } from 'ide-lib-base-component';
 
 
-import { uuid } from '../../lib/util';
-import { debugModel } from '../../lib/debug';
+import { uuid, escapeRegex } from '../../lib/util';
+import { debugModel, debugMini } from '../../lib/debug';
 import { map, traverse, TRAVERSE_TYPE } from 'ss-tree';
-import { IStoresModel } from './stores';
 import { DEFAULT_PROPS, ISchemaProps, ISchemaTreeProps } from '../index';
+
 
 // 列举 schema 中特殊的字段名，一般是可以根据现有 schema 计算出来的属性，不需要硬编码
 // 而诸如 props、fetch 等字段，需要存储起来
@@ -35,13 +36,11 @@ export const SPECIAL_NAMES = Object.values(SPECIAL_ATTRIBUTE_NAME);
  */
 export function genCompIdByName(
   name: string = 'unknown',
-  isMasterApp: boolean = false,
   isUUID: boolean = false
 ) {
-  let uid = uuid();
-  let prefix = isMasterApp ? 'master_' : '';
-  let ssPrefix = isUUID ? 'uu_' : '';
-  return `\$${ssPrefix}${prefix}${name}_${uid}`;
+  const uid = uuid();
+  const ssPrefix = isUUID ? 'uu_' : '';
+  return `\$${ssPrefix}${name}_${uid}`;
 }
 
 // 忽略 children 的值，该属性做特殊处理
@@ -86,17 +85,17 @@ export function createSchemaModel(
 
   return map(
     mergedSchema,
-    (node: any) => {
+    (node: ISchemaProps) => {
       // 设置属性
       const newSchema = SchemaModel.create({
         id:
-          (<ISchemaProps>node).id ||
-          genCompIdByName((<ISchemaProps>node).name, false, true),
+          node.id ||
+          genCompIdByName(node.name, true),
         screenId:
-          (<ISchemaProps>node).screenId ||
-          genCompIdByName((<ISchemaProps>node).name),
-        name: (<ISchemaProps>node).name, // 组件名
-        attrs: stringifyAttribute(<ISchemaProps>node)
+          (node).screenId ||
+          genCompIdByName(node.name),
+        name: (node).name, // 组件名
+        attrs: stringifyAttribute(node)
       });
       return newSchema;
     },
@@ -134,6 +133,7 @@ export function createEmptySchemaTreeModel() {
 }
 
 type SchemaOrModel = ISchemaModel | ISchemaProps;
+
 /**
  * 从当前的 schema 中提取出所有的节点；按广度遍历
  *
@@ -189,36 +189,28 @@ export function findById(
   return modelNode;
 }
 
+
+
+// 获取 id 匹配规则
+export const getIdRegex = (id: string) => {
+  invariant(!!id, '[getIdRegex] 传入的 id 值不存在，请 check 数据格式');
+  const escaped = escapeRegex(id);
+  debugMini(`[getIdRegex] id: ${id} --esc--> ${escaped} 转换后的正则表达式 ${RegExp(escaped)}`);
+  return new RegExp(escaped);
+};
+
 /* ----------------------------------------------------
     更新节点信息
 ----------------------------------------------------- */
-const update = (valueSet: string[]) => (
-  item: ISchemaModel | ISchemaTreeModel | IStoresModel,
-  attrName: string,
-  value: any
-): boolean => {
-  invariant(!!item, '入参 item 必须存在');
-  // 如果不是可更新的属性，那么将返回 false
-  if (!valueSet.includes(attrName)) {
-    debugModel(
-      `[更新属性] 属性名 ${attrName} 不属于可更新范围，无法更新成 ${value} 值；（附:可更新属性列表：${valueSet}）`
-    );
-    return false;
-  }
-
-  const functionName = `set${capitalize(attrName)}`; // 比如 attrName 是 `type`, 则调用 `setType` 方法
-  (item as any)[functionName](value);
-  return true;
-};
 
 // 定义 panel 可更新信息的属性
 const SCHEMA_EDITABLE_ATTRIBUTE = ['name', 'screenId', 'attrs'];
-export const updateSchema = update(SCHEMA_EDITABLE_ATTRIBUTE);
+export const updateSchema = updateInScope(SCHEMA_EDITABLE_ATTRIBUTE);
 
 // 定义 panel 可更新信息的属性
 const SCHEMATREE_EDITABLE_ATTRIBUTE = ['schema', 'selectedId', 'expandedIds'];
-export const updateSchemaTree = update(SCHEMATREE_EDITABLE_ATTRIBUTE);
+export const updateSchemaTree = updateInScope(SCHEMATREE_EDITABLE_ATTRIBUTE);
 
 // 定义 stores 可更新信息的属性
 const STORES_EDITABLE_ATTRIBUTE = ['schemaTree'];
-export const updateStoresAttribute = update(STORES_EDITABLE_ATTRIBUTE);
+export const updateStoresAttribute = updateInScope(STORES_EDITABLE_ATTRIBUTE);

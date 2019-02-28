@@ -3,7 +3,7 @@ import { IContext } from './helper';
 export const router = new Router();
 
 // 移除整棵树
-router.del('nodes', '/tree', function(ctx: IContext) {
+router.del('delTree', '/tree', function(ctx: IContext) {
   const { stores } = ctx;
   ctx.response.body = {
     node: stores.resetToEmpty()
@@ -12,7 +12,7 @@ router.del('nodes', '/tree', function(ctx: IContext) {
 });
 
 // 移除指定节点
-router.del('nodes', '/nodes/:id', function(ctx: IContext) {
+router.del('delNode', '/nodes/:id', function(ctx: IContext) {
   const { stores, params } = ctx;
   const { id } = params;
   // 这里有个特殊情况，如果 id 是根节点的 id，需要调用 `resetToEmpty` 方法

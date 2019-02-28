@@ -1,9 +1,10 @@
 import Router from 'ette-router';
-// import { isExist} from 'ide-lib-utils';
+import { pick } from 'ide-lib-utils';
 import { buildNormalResponse } from 'ide-lib-base-component';
 
+import { SCHEMA_CONTROLLED_KEYS } from '../schema/';
 import { getAllNodes, createSchemaModel, findById } from '../schema/util';
-import { IContext } from './helper';
+import { IContext, BUFFER_NODETYPE, addBufferNode} from './helper';
 import { ISchemaModel } from '../schema';
 
 import { debugIO } from '../../lib/debug';
@@ -91,6 +92,24 @@ router.post('addSiblingNode', '/nodes/:id/sibling', function (ctx: IContext) {
   }
 
   buildNormalResponse(ctx, 200, data ? { node: data } : null, message);
+});
 
+
+// 新增某个 clone 节点信息到 buffer 中
+router.post('cloneNode', '/nodes/:id/clone', function (ctx: IContext) {
+  const { stores } = ctx;
+  const { id } = ctx.params;
+  const { origin, target } = stores.model.schema.cloneFromSubId(id);
+
+  let message = '';
+  if (!target) {
+    message = '拷贝失败，问题定位源 `cloneFromSubId`';
+  } else {
+    message = `拷贝成功，新节点 id: ${target.id}`;
+
+    addBufferNode(stores, BUFFER_NODETYPE.CLONED, target); // 将拷贝的节点放在缓存中
+  }
+
+  buildNormalResponse(ctx, 200, { origin: origin && pick(origin, SCHEMA_CONTROLLED_KEYS), target: target && pick(target, SCHEMA_CONTROLLED_KEYS) }, message);
 });
 

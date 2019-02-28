@@ -17,27 +17,43 @@ import {
   getAllNodes,
   updateSchema,
   createEmptySchema,
-  updateSchemaTree
+  updateSchemaTree,
+  getIdRegex,
+  genCompIdByName
 } from './util';
 
 import { ISchemaProps } from '../../index';
 
-import { map } from 'ss-tree';
+import { map, traverse, TRAVERSE_TYPE } from 'ss-tree';
+
+
+// 获取被 schema tree 控制的 key 的列表
+export type TSchemaControlledKeys = keyof SnapshotOrInstance<
+  typeof SchemaModel
+>;
+// 定义被 store 控制的 key 的列表，没法借用 ts 的能力动态从 TSchemaControlledKeys 中获取
+export const SCHEMA_CONTROLLED_KEYS: string[] = [
+  'screenId',
+  'name',
+  'id',
+  'attrs',
+  'children'
+];
 
 /**
  * 组件 schema 模型
  */
 export const SchemaModel = types
   .model('SchemaModel', {
-    id: types.optional(types.string, ''), // 创建之后固定，不能再更改
-    screenId: types.optional(types.string, ''), // 这个是显示在页面上的 id，是可以被更改的，该 id 是用在回调函数等地方
+    id: types.string, // 创建之后不要让用户层面轻易更改
+    screenId: types.optional(types.string, '_unset'), // 这个是显示在页面上的 id，是可以被更改的，该 id 是用在回调函数等地方
     name: types.optional(types.string, ''),
     attrs: types.optional(types.string, '{}'), // 保存属性字符串,
     parentId: types.optional(types.string, ''), // 保存父节点
     children: types.array(types.late((): IAnyModelType => SchemaModel)) // 在 mst v3 中， `types.array` 默认值就是 `[]`
   })
 
-  // 基于 mobx 的 computed 功能，默认会有缓存功能
+  // L0:get 基于 mobx 的 computed 功能，默认会有缓存功能
   .views(self => {
     return {
       /**
@@ -92,36 +108,7 @@ export const SchemaModel = types
 
     };
   })
-  .views(self => {
-    return {
-      /**
-       * 根据 id 返回后代节点（不一定是直系子节点），如果有过滤条件，则返回符合过滤条件的节点
-       */
-      findNode(id: string, filterArray?: string | string[]) {
-        return findById(self as any, id, filterArray);
-      },
-      /**
-       * 根据 id 定位到直系子节点的索引值；
-       * 即，返回子节点中指定 id 对应的节点位置
-       */
-      indexOfChild(id: string): number {
-        if (!id) {
-          return -1;
-        }
-        let ids = (this.children || []).map((child: ISchemaModel) => child.id);
-        return ids.indexOf(id);
-      },
-
-      /**
-       * 只返回所有的节点的属性子集合，其实该方法和 util 中的 `allNodesWithFilter` 有异曲同工之处
-       * 依赖：allNodes
-       */
-      allNodesWithFilter(filterArray: string | string[] = CONTROLLED_KEYS) {
-        const filters = [].concat(filterArray || []);
-        return self.allNodes.map((node: any) => pick(node, filters));
-      }
-    };
-  })
+  // L0:update 更新节点属性
   .actions(self => {
     return {
       /**
@@ -159,7 +146,20 @@ export const SchemaModel = types
        * 影响属性：screenId
        */
       setScreenId(id: string) {
-        invariant(!!id, '将要更改的 screen id 为空');
+        invariant(!!id, '目标 screenId 不应该为空');
+        
+        // 同时需要保证更改后的 screenId 是树节点中唯一的，不能和现有的重复
+        const isExist = traverse(
+          self,
+          (node: ISchemaProps) => {
+            return node.screenId == id;
+          },
+          TRAVERSE_TYPE.BFS,
+          true
+        );
+
+        invariant(!isExist, '修改不生效，因为目标 screenId 已存在');
+
         self.screenId = id;
       },
 
@@ -187,7 +187,63 @@ export const SchemaModel = types
       }
     };
   })
-  // update 操作
+  // L1:get 根据 id 等定位获得特定子节点
+  .views(self => {
+    return {
+      /**
+       * 根据 id 返回后代节点（不一定是直系子节点），如果有过滤条件，则返回符合过滤条件的节点
+       */
+      findNode(id: string, filterArray?: string | string[]) {
+        debugModel(`[findNode] 开始查找节点 ${id}, filterArray: ${filterArray}`)
+        return findById(self as any, id, filterArray);
+      },
+      /**
+       * 根据 id 定位到直系子节点的索引值；
+       * 即，返回子节点中指定 id 对应的节点位置
+       */
+      indexOfChild(id: string): number {
+        if (!id) {
+          return -1;
+        }
+        let ids = (this.children || []).map((child: ISchemaModel) => child.id);
+        return ids.indexOf(id);
+      },
+
+      /**
+       * 只返回所有的节点的属性子集合
+       * 依赖：allNodes
+       */
+      allNodesWithFilter(filterArray: string | string[] = SCHEMA_CONTROLLED_KEYS) {
+        const filters = [].concat(filterArray || []);
+        return self.allNodes.map((node: any) => pick(node, filters));
+      },
+
+      /**
+       * 拷贝当前的一份节点，注意不要拷贝 id、functions 等属性
+       */
+      clone() {
+        let clonedNode = map(self, function (node: ISchemaModel) {
+          let regex = getIdRegex(node.screenId); // 生成 screen id 相关的正则匹配
+          let newScreenId = genCompIdByName(node.name); // 生成屏幕可见的 id，方便用户更改，也可以被用户在其他地方去引用
+          let newUId = genCompIdByName(node.name, true); // 生成节点的唯一 id，用户层面不可被操作，用于内部程序级别的操作；
+          let attrStr = JSON.stringify(node.attrsJSON).replace(regex, newScreenId);  // 将内部的 screen id 替换成新的 screen id 变量
+
+          return SchemaModel.create({
+            name: node.name,
+            attrs: attrStr,
+            id: newUId,
+            screenId: newScreenId
+          })
+        }, true, (parent: any, children: any) => {
+          parent.setChildren(children); // 调用 comp.setChildren 方法
+        }) as ISchemaModel;
+
+        debugModel(`[clone] 将节点 ${self.id} 拷贝成新节点 ${clonedNode.id}, 生成的节点对象：%o`, clonedNode);
+        return clonedNode;
+      }
+    };
+  }) 
+  // L1:update, 批量更新指定属性，本质是组合调用上一层的 set 操作
   .actions(self => {
     return {
       /**
@@ -195,7 +251,7 @@ export const SchemaModel = types
        * 影响属性：attrName 对应的属性
        */
       updateAttribute: (attrName: string, value: string | object): boolean => {
-        return updateSchema(self as ISchemaModel, attrName, value);
+        return updateSchema(self, attrName, value);
       },
 
       /**
@@ -213,15 +269,11 @@ export const SchemaModel = types
 
         if (!!node) {
           // 首先找到节点
-          return updateSchema(node as ISchemaModel, attrName, value);
+          return updateSchema(node, attrName, value);
         }
         return false;
-      }
-    };
-  })
-  // 新增操作
-  .actions(self=>{
-    return{
+      },
+
       /**
         * 新增直系节点，简单的 append
         * 影响属性：children
@@ -233,9 +285,9 @@ export const SchemaModel = types
           self.children.push(node);
         });
       }
-    }
+    };
   })
-  // 删除操作
+  // L1:del 删除操作
   .actions(self => {
     return {
       removeNode: (id: string): false | ISchemaProps => {
@@ -252,7 +304,20 @@ export const SchemaModel = types
       }
     };
   })
-  // 子节点相关
+  // L2:get 复杂获取操作，比如获取拷贝后的新节点
+  .actions(self=>{
+    return {
+      /**
+       * 根据拷贝当前的子节点（依据子节点的 id）
+       */
+      cloneFromSubId(id: string){
+        const originNode = self.findNode(id) as ISchemaModel; // 定位节点
+        debugModel(`[cloneFromSubId] 拷贝生成的节点 id ${originNode && originNode.id}`);
+        return { origin: originNode, target: originNode && originNode.clone()};
+      }
+    }
+  })
+  // L2:update 子节点相关的更新操作
   .actions(self => {
     return {
       /**
@@ -276,9 +341,12 @@ export const SchemaModel = types
         insertedNode.setParentId(self.id);
         self.children.splice(resultIndex, 0, insertedNode);
 
-      },
-
-
+      }
+    };
+  })
+  // L2:del 删除操作
+  .actions(self=>{
+    return {
       /**
        * 根据 id 删除直系节点，如果想要整个重置 children，请使用 `setChildren` 方法
        * 影响属性：children
@@ -287,7 +355,7 @@ export const SchemaModel = types
         const ids = [].concat(idOrIdArray);
         debugModel(
           `[comp] 删除前 children 长度: ${
-            self.children.length
+          self.children.length
           }, 待删除的 ids: ${ids.join('、')}`
         );
 
@@ -310,13 +378,13 @@ export const SchemaModel = types
 
         debugModel(
           `[comp] 删除后 children 长度: ${
-            self.children.length
+          self.children.length
           }，ids: ${self.children.map(o => o.id).join('、')}`
         );
       }
-    };
+    }
   })
-  // 基于上述基础 api 封装的较高层级 API
+  // L3:update 基于上述基础 api 封装的较高层级 API
   .actions(self=>{
     return {
       /**
@@ -329,7 +397,7 @@ export const SchemaModel = types
       addSibling: (subNode: ISchemaModel, insertedNode: ISchemaModel, offset: number | string = 0): boolean => {
 
         if (!isExist(subNode.parentId)) {
-          debugModel(`[addSibling]节点 ${subNode.id} 无父元素，无法进行新增兄弟节点的操作`);
+          debugModel(`[addSibling] 节点 ${subNode.id} 无父元素，无法进行新增兄弟节点的操作`);
           return false;
         }
 
@@ -342,7 +410,7 @@ export const SchemaModel = types
         // 找到要插入节点在 parentModel 的 child 位置
         const nodeIndex = parentNode.indexOfChild(subNode.id);
         const targetIndex = parseInt(offset as string) + nodeIndex;
-        debugModel(`[addSibling]计算插入位置：${nodeIndex} + ${offset}= ${targetIndex}`);
+        debugModel(`[addSibling] 计算插入位置：${nodeIndex} + ${offset}= ${targetIndex}`);
         // 调用上一层 api 完成该项功能，注意这里的 offset 是字符
         self.addChild(insertedNode, + targetIndex);
 
@@ -354,7 +422,7 @@ export const SchemaModel = types
 
 export interface ISchemaModel extends Instance<typeof SchemaModel> {}
 
-// 获取被 store 控制的 key 的列表
+// 获取被 schema tree 控制的 key 的列表
 export type TSchemaTreeControlledKeys = keyof SnapshotOrInstance<
   typeof SchemaTreeModel
 >;
@@ -371,6 +439,17 @@ export const SchemaTreeModel = types
     schema: SchemaModel,
     selectedId: types.optional(types.string, ''),
     expandedIds: types.array(types.string)
+  })
+  .views(self => {
+    return {
+      /**
+       * 只返回当前模型的属性，可以通过 filter 字符串进行属性项过滤
+       */
+      allAttibuteWithFilter(filterArray: string | string[] = CONTROLLED_KEYS) {
+        const filters = [].concat(filterArray || []);
+        return pick(self, filters);
+      }
+    };
   })
   .actions(self => {
     return {
