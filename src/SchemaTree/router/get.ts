@@ -9,8 +9,10 @@ import { pick } from 'ide-lib-utils';
 export const router = new Router();
 
 
-// 默认获取所有的节点，可以通过 filter 返回指定的属性值
-// 比如 /nodes?filter=name,screenId ，返回的集合只有这两个属性
+/**
+ * 默认获取所有的节点，可以通过 filter 返回指定的属性值
+ * 比如 /nodes?filter=name,screenId ，返回的集合只有这两个属性
+ */
 router.get('getAllNodes', '/nodes', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { query } = request;
@@ -21,7 +23,9 @@ router.get('getAllNodes', '/nodes', function(ctx: IContext) {
   ctx.response.status = 200;
 });
 
-// 返回某个节点的 schema 信息
+/**
+ *  返回某个节点的 schema 信息 
+ */
 router.get('getNodeById', '/nodes/:id', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { query } = request;
@@ -34,7 +38,9 @@ router.get('getNodeById', '/nodes/:id', function(ctx: IContext) {
   ctx.response.status = 200;
 });
 
-// 返回 buffer 中的 clone 节点信息
+/**
+ * 返回 buffer 中的 clone 节点信息
+ */
 router.get('getCloneNode', '/buffers/clone', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { query } = request;
@@ -50,4 +56,12 @@ router.get('getCloneNode', '/buffers/clone', function(ctx: IContext) {
   } 
   
   buildNormalResponse(ctx, 200, { node: node && pick(node, filterArray) }, message);
+});
+
+/**
+ * 返回当前被选中的节点
+ */
+router.get('getSelection', '/selection', function (ctx: IContext) {
+  const { stores } = ctx;
+  buildNormalResponse(ctx, 200, { id: stores.model.selectedId });
 });

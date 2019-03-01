@@ -3,7 +3,9 @@ import { IContext } from './helper';
 
 export const router = new Router();
 
-// 更新根节点的属性
+/**
+ * 更新根节点的属性
+ */
 router.put('updateRoot', '/tree/root', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { name, value } = request.data;
@@ -14,7 +16,9 @@ router.put('updateRoot', '/tree/root', function(ctx: IContext) {
   ctx.response.status = 200;
 });
 
-// 更新指定节点的属性
+/**
+ * 更新指定节点的属性
+ */
 router.put('updateNodeById', '/nodes/:id', function(ctx: IContext) {
   const { stores, request } = ctx;
   const { name, value } = request.data;
@@ -29,7 +33,9 @@ router.put('updateNodeById', '/nodes/:id', function(ctx: IContext) {
   ctx.response.status = 200;
 });
 
-// 更新被选中的节点 id，同时自动展开
+/**
+ * 更新被选中的节点 id，同时自动展开
+ */
 router.put('updateSelection', '/selection/:id', function(ctx: IContext) {
   const { stores, params } = ctx;
   const { id } = params;

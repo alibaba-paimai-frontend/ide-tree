@@ -176,14 +176,13 @@ export const SchemaModel = types
        * 更新 attrs 属性
        * 影响属性：attrs
        */
-      setAttrs(attrOrObject: string | object) {
-        let attrObject = attrOrObject;
-        // 如果
-        if (typeof attrOrObject === 'string') {
-          attrObject = JSON.parse(attrOrObject);
-        }
-
-        self.attrs = stringifyAttribute(attrObject as ISchemaProps);
+      setAttrs(attrOrObject: Partial<ISchemaProps>) {
+        // let attrObject = attrOrObject;
+        // // 如果
+        // if (typeof attrOrObject === 'string') {
+        //   attrObject = JSON.parse(attrOrObject);
+        // }
+        self.attrs = stringifyAttribute(attrOrObject);
       }
     };
   })

@@ -2,7 +2,9 @@ import Router from 'ette-router';
 import { IContext } from './helper';
 export const router = new Router();
 
-// 移除整棵树
+/**
+ * 移除整棵树
+ */
 router.del('delTree', '/tree', function(ctx: IContext) {
   const { stores } = ctx;
   ctx.response.body = {
@@ -11,7 +13,10 @@ router.del('delTree', '/tree', function(ctx: IContext) {
   ctx.response.status = 200;
 });
 
-// 移除指定节点
+
+/**
+ * 移除指定节点
+ */
 router.del('delNode', '/nodes/:id', function(ctx: IContext) {
   const { stores, params } = ctx;
   const { id } = params;

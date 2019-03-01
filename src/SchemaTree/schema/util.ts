@@ -61,7 +61,7 @@ function replacer(key: string, value: any) {
  * @param {ISchemaProps} schema
  * @returns
  */
-export function stringifyAttribute(schema: ISchemaProps) {
+export function stringifyAttribute(schema: Partial<ISchemaProps>) {
   return JSON.stringify(schema, replacer);
 }
 
@@ -95,8 +95,8 @@ export function createSchemaModel(
           (node).screenId ||
           genCompIdByName(node.name),
         name: (node).name, // 组件名
-        attrs: stringifyAttribute(node)
       });
+      newSchema.setAttrs(node); // 对 attrs 属性进行设置
       return newSchema;
     },
     true,
