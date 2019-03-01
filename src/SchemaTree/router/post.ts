@@ -4,14 +4,16 @@ import { buildNormalResponse } from 'ide-lib-base-component';
 
 import { SCHEMA_CONTROLLED_KEYS } from '../schema/';
 import { getAllNodes, createSchemaModel, findById } from '../schema/util';
-import { IContext, BUFFER_NODETYPE, addBufferNode} from './helper';
+import { IContext, BUFFER_NODETYPE, addBufferNode, getBufferNode} from './helper';
 import { ISchemaModel } from '../schema';
 
 import { debugIO } from '../../lib/debug';
 
 export const router = new Router();
 
-// 创建新的 tree
+/**
+ * 创建新的 tree
+ */
 router.post('createNewTree', '/tree', function (ctx: IContext) {
   const { stores, request } = ctx;
   const { schema } = request.data;
@@ -25,10 +27,13 @@ router.post('createNewTree', '/tree', function (ctx: IContext) {
   buildNormalResponse(ctx, 200, {ids: ids}, '创建成功');
 });
 
-// 新增子节点
+/**
+ * 新增子节点到指定位置
+ * 备注：通过 {useBuffer: true} 可以直接使用来自 buffer clone 缓存中的节点（来自拷贝操作）
+ */
 router.post('addChildNode', '/nodes/:id/children', function (ctx: IContext) {
   const { stores, request } = ctx;
-  const { schema, targetIndex } = request.data;
+  const { schema, targetIndex, useBuffer, useClone = true } = request.data;
   const { id } = ctx.params;
 
   let message: string;
@@ -37,10 +42,13 @@ router.post('addChildNode', '/nodes/:id/children', function (ctx: IContext) {
   if(!id) {
     message = '传入节点 id 不能为空';
   } else {
-    const newNode = createSchemaModel(schema);
+    // 从缓存区获取子节点的时候，需要节点副本后再粘贴到子节点中去，否则会提示 id 已存在
+    const newNode = useBuffer ? getBufferNode(stores, BUFFER_NODETYPE.CLONED, useClone) : createSchemaModel(schema);
     const targetNode = findById(stores.model.schema, id) as ISchemaModel;
 
-    if (!targetNode) {
+    if (useBuffer && !newNode) {
+      message = '添加失败，缓存区不存在 clone 类型节点';
+    } else if (!targetNode) {
       message = `id 为 ${id} 的节点不存在`;
     } else {
       const isExisted = findById(stores.model.schema, newNode.id) as ISchemaModel;
@@ -54,10 +62,13 @@ router.post('addChildNode', '/nodes/:id/children', function (ctx: IContext) {
     }
   }
 
-  buildNormalResponse(ctx, 200, data ? { node: data}: 0, message);
+  buildNormalResponse(ctx, 200, data ? { node: data, useBuffer: useBuffer }: 0, message);
 });
 
-// 新增兄弟节点
+
+/**
+ * 新增兄弟节点到指定位置
+ */
 router.post('addSiblingNode', '/nodes/:id/sibling', function (ctx: IContext) {
   const { stores, request } = ctx;
   const { schema, offset } = request.data;
@@ -95,8 +106,10 @@ router.post('addSiblingNode', '/nodes/:id/sibling', function (ctx: IContext) {
 });
 
 
-// 新增某个 clone 节点信息到 buffer 中
-router.post('cloneNode', '/nodes/:id/clone', function (ctx: IContext) {
+/**
+ * 新增某个 clone 节点信息到 buffer 中
+ */
+router.post('cloneNodeIntoBuffer', '/nodes/:id/clone', function (ctx: IContext) {
   const { stores } = ctx;
   const { id } = ctx.params;
   const { origin, target } = stores.model.schema.cloneFromSubId(id);

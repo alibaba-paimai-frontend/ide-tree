@@ -46,6 +46,25 @@ const createClone = client => () => {
   client.put(`/selection/${id}`);
 };
 
+const pasteClone = client => () => {
+  const id = document.getElementById('nodeId').value;
+  client.post(`/nodes/${id}/children`, {useBuffer: true}).then(res => {
+    const { status, body } = res;
+    if (status === 200) {
+      const message = body.message;
+      const node = body.data.node || {};
+      document.getElementById('info').innerText = `${message} \n` + JSON.stringify(
+        node,
+        null,
+        4
+      ) + `\n\n 插入节点的信息:${JSON.stringify(node, null, 4)}`;
+    }
+  });
+
+  // 同时选中那个节点
+  client.put(`/selection/${id}`);
+};
+
 const getClone = client => () =>{
   client.get(`/buffers/clone`).then(res => {
     const { status, body } = res;
@@ -63,7 +82,7 @@ const getClone = client => () =>{
 
 storiesOf('API - get', module)
   .addParameters(wInfo(mdGetNode))
-  .addWithJSX('/buffers/clone 获取 clone 节点信息', () => {
+  .addWithJSX('/buffers/clone 获取 clone 节点', () => {
     return (
       <Row style={styles.demoWrap}>
         <Col span={10} offset={2}>
@@ -74,6 +93,7 @@ storiesOf('API - get', module)
           <>
             <Button onClick={createClone(client1)}>拷贝节点</Button>
             <Button onClick={getClone(client1)}>获取拷贝节点</Button>
+            <Button onClick={pasteClone(client1)}>粘贴拷贝节点</Button>
             <Button onClick={createNew(client1)}>创建随机树</Button>
           </>
           <SchemaTreeWithStore1 />

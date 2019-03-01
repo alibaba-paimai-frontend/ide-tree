@@ -44,7 +44,7 @@ router.get('getCloneNode', '/buffers/clone', function(ctx: IContext) {
 
   let message = '';
   if (!node) {
-    message = '当前缓存区中去 clone 类型节点 `cloneFromSubId`';
+    message = '当前缓存区中无 clone 类型节点，问题定位源 `getBufferNode`';
   } else {
     message = `获取成功. clone 节点 id: ${node.id}`
   } 
