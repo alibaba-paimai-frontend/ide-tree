@@ -410,8 +410,9 @@ export const SchemaModel = types
         const nodeIndex = parentNode.indexOfChild(subNode.id);
         const targetIndex = parseInt(offset as string) + nodeIndex;
         debugModel(`[addSibling] 计算插入位置：${nodeIndex} + ${offset}= ${targetIndex}`);
+        
         // 调用上一层 api 完成该项功能，注意这里的 offset 是字符
-        self.addChild(insertedNode, + targetIndex);
+        parentNode.addChild(insertedNode, + targetIndex);
 
         return true;
       },
