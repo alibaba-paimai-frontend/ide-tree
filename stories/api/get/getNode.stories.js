@@ -64,6 +64,27 @@ const getById = client => () => {
   // 同时选中那个节点
   client.put(`/selection/${id}`);
 };
+
+const getParendById = client => () => {
+  const id = document.getElementById('nodeId').value;
+  client.get(`/nodes/${id}/parent`).then(res => {
+    const { status, body } = res;
+    if (status === 200) {
+      const node = body.data.node || {};
+      document.getElementById('info').innerText = JSON.stringify(
+        node,
+        null,
+        4
+      );
+      // 同时选中父节点
+      client.put(`/selection/${node.id}`);
+    }
+  });
+
+
+};
+
+
 storiesOf('API - get', module)
   .addParameters(wInfo(mdGetNode))
   .addWithJSX('/nodes 获取所有节点（独立的schema上下文）', () => {
@@ -90,13 +111,12 @@ storiesOf('API - get', module)
           <Input
             placeholder="输入节点 ID"
             id="nodeId"
-            addonAfter={
-              <>
-                <Button onClick={getById(client2)}>获取节点信息</Button>
-                <Button onClick={createNew(client2)}>创建随机树</Button>
-              </>
-            }
           />
+          <>
+            <Button onClick={getById(client2)}>获取节点信息</Button>
+            <Button onClick={getParendById(client2)}>获取父节点信息</Button>
+            <Button onClick={createNew(client2)}>创建随机树</Button>
+          </>
           <SchemaTreeWithStore2 />
         </Col>
         <Col span={12}>

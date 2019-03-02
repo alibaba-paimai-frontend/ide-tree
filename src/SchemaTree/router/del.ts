@@ -1,5 +1,6 @@
 import Router from 'ette-router';
 import { IContext } from './helper';
+import { buildNormalResponse } from 'ide-lib-base-component';
 export const router = new Router();
 
 /**
@@ -25,9 +26,7 @@ router.del('delNode', '/nodes/:id', function(ctx: IContext) {
     id === stores.model.schema.id
       ? stores.resetToEmpty()
       : stores.model.schema.removeNode(id);
+  let message = `节点 ${id} 删除成功`;
 
-  ctx.response.body = {
-    node: result
-  };
-  ctx.response.status = 200;
+  buildNormalResponse(ctx, 200, { node: result }, message);
 });

@@ -1,10 +1,11 @@
 import Router from 'ette-router';
 import { buildNormalResponse } from 'ide-lib-base-component';
+import { pick } from 'ide-lib-utils';
 
 import { SCHEMA_CONTROLLED_KEYS } from '../schema/';
 import { findById } from '../schema/util';
 import { IContext, extracFilters, getBufferNode, BUFFER_NODETYPE } from './helper';
-import { pick } from 'ide-lib-utils';
+import { debugIO } from '../../lib/debug';
 
 export const router = new Router();
 
@@ -37,6 +38,33 @@ router.get('getNodeById', '/nodes/:id', function(ctx: IContext) {
   };
   ctx.response.status = 200;
 });
+
+/**
+ *  返回某个节点的 parent 节点信息 
+ */
+router.get('getNodeParentById', '/nodes/:id/parent', function(ctx: IContext) {
+  const { stores, request } = ctx;
+  const { query } = request;
+  const { id } = ctx.params;
+
+  const node = findById(stores.model.schema, id, ['parentId']);
+
+  const parentId = node && node.parentId;
+  debugIO(`[api - getNodeParentById] 找到 parentId: ${parentId}`);
+
+  let message = '';
+  let parentNode;
+
+  if(!parentId) {
+    message = '当前节点无父节点';
+  } else {
+    const filterArray = extracFilters(query && query.filter, SCHEMA_CONTROLLED_KEYS);
+    parentNode = findById(stores.model.schema, parentId, filterArray);
+    message = `父节点 id 为 ${parentId}`;
+  }
+  buildNormalResponse(ctx, 200, parentNode ? { node: parentNode} : {}, message);
+});
+
 
 /**
  * 返回 buffer 中的 clone 节点信息

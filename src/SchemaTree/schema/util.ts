@@ -76,15 +76,13 @@ export function stringifyAttribute(schema: Partial<ISchemaProps>) {
 export function createSchemaModel(
   schema: ISchemaProps = DEFAULT_PROPS.schema
 ): ISchemaModel {
-  const mergedSchema = Object.assign({}, DEFAULT_PROPS.schema, schema);
-
   // 传递给 map 函数的对象，必须具备 `children` 属性，否则没法迭代
-  if (!mergedSchema.children) {
-    mergedSchema.children = [];
+  if (!schema.children) {
+    schema.children = [];
   }
 
   return map(
-    mergedSchema,
+    schema,
     (node: ISchemaProps) => {
       // 设置属性
       const newSchema = SchemaModel.create({
