@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.5"></a>
+## [2.0.5](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.4...v2.0.5) (2019-03-08)
+
+
+### Bug Fixes
+
+* **api 插入兄弟节点:** 使用父节点而不是根节点来调用 addChild ([9536443](https://github.com/alibaba-paimai-frontend/ide-tree/commit/9536443))
+
+
+### Features
+
+* **schema:** 新增 addChild 功能，能够在指定位置新增子节点； ([97698b5](https://github.com/alibaba-paimai-frontend/ide-tree/commit/97698b5))
+* **功能增强: 节点api:** 在 addChildNode api 中支持使用缓存区节点的添加为子节点功能，解决诸如 “粘贴” 节点的功能需求； ([f2416b5](https://github.com/alibaba-paimai-frontend/ide-tree/commit/f2416b5))
+* **功能完善:** 新增 displayName，方便使用 react 调试 ([7b31f50](https://github.com/alibaba-paimai-frontend/ide-tree/commit/7b31f50))
+* **功能新增: api:** 新增 getParendById api，可以根据节点获取父节点信息 ([4e1a4ac](https://github.com/alibaba-paimai-frontend/ide-tree/commit/4e1a4ac))
+* **功能新增: api:** 新增 getSelection api；优化 createSchemaModel 方法； ([c2ecb27](https://github.com/alibaba-paimai-frontend/ide-tree/commit/c2ecb27))
+* **功能新增: 节点api:** 新增拷贝(clone)节点的功能 api ([f71d85d](https://github.com/alibaba-paimai-frontend/ide-tree/commit/f71d85d))
+* **节点操作api:** 新增 addSiblingNode api；接入 ide-lib 工具； ([66bcf73](https://github.com/alibaba-paimai-frontend/ide-tree/commit/66bcf73))
+
+
+
 <a name="2.0.4"></a>
 ## [2.0.4](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.3...v2.0.4) (2019-02-11)
 
