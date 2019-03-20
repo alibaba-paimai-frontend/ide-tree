@@ -222,7 +222,7 @@ export const SchemaTreeHOC: (
     );
   };
   SchemaTreeHOC.displayName = 'SchemaTreeHOC';
-  return observer(based(SchemaTreeHOC, DEFAULT_PROPS));
+  return observer(based(observer(SchemaTreeHOC), DEFAULT_PROPS));
 };
 
 // 采用高阶组件方式生成普通的 SchemaTree 组件
