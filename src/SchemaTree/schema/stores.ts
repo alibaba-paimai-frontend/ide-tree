@@ -1,9 +1,21 @@
 import { types, SnapshotOrInstance, Instance, cast } from 'mobx-state-tree';
+import {
+  TAnyMSTModel,
+  IStoresEnv,
+  getSubAppsFromFactoryMap
+} from 'ide-lib-base-component';
 import { updateStoresAttribute, createEmptySchemaTreeModel } from './util';
 import { SchemaTreeModel } from './index';
-import { debugInteract } from '../../lib/debug';
 
 export const STORE_ID_PREIX = 'sst_';
+
+export enum ESubApps {}
+
+// 定义子 facotry 映射关系
+export const FACTORY_SUBAPP: Record<
+  ESubApps,
+  (...args: any[]) => Partial<IStoresEnv<TAnyMSTModel>>
+> = {};
 
 export const Stores = types
   .model('StoresModel', {
@@ -42,12 +54,30 @@ export const Stores = types
 export interface IStoresModel extends Instance<typeof Stores> {}
 
 let autoId = 1;
+
 /**
- * 工厂方法，用于创建 stores
+ * 工厂方法，用于创建 stores，同时注入对应子元素的 client 和 app
  */
-export function StoresFactory(): IStoresModel {
-  return Stores.create({
-    id: `${STORE_ID_PREIX}${autoId++}`,
-    model: createEmptySchemaTreeModel() as any
-  });
+export function StoresFactory() {
+  const { subStores, subApps, subClients } = getSubAppsFromFactoryMap(
+    FACTORY_SUBAPP
+  );
+
+  // see: https://github.com/mobxjs/mobx-state-tree#dependency-injection
+  // 依赖注入，方便在 controller 中可以直接调用子组件的 controller
+  const stores: IStoresModel = Stores.create(
+    {
+      id: `${STORE_ID_PREIX}${autoId++}`,
+      model: createEmptySchemaTreeModel() as any,
+      ...(subStores as Record<ESubApps, TAnyMSTModel>)
+    },
+    {
+      clients: subClients
+    }
+  );
+
+  return {
+    stores,
+    innerApps: subApps
+  };
 }

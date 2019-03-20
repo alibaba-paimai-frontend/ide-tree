@@ -8,7 +8,7 @@ import { SchemaTreeFactory } from '../../../src';
 import { treegen } from '../../helper';
 // const { SchemaTreeWithStore, client } = SchemaTreeFactory();
 
-const {SchemaTreeWithStore, client} = SchemaTreeFactory();
+const { SchemaTreeWithStore, client } = SchemaTreeFactory();
 
 const { Option } = Select;
 const styles = {
@@ -32,6 +32,13 @@ function updateRootName() {
 function handleChange(value) {
   console.log(`selected ${value}`);
   selectedAttrName = value;
+}
+
+// 当 store 有变更的时候，调用该方法
+// 作用：增删改 shema 的时候，通知外界什么出现了变更
+// 机理：监听 mst 的变更
+function onModelChange(key, value) {
+  console.log(222, key, value);
 }
 
 function updateById() {
@@ -104,7 +111,7 @@ storiesOf('API - put', module)
             </Col>
           </Row>
 
-          <SchemaTreeWithStore />
+          <SchemaTreeWithStore onModelChange={onModelChange} />
         </Col>
         <Col span={12}>
           <div id="info" />

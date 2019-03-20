@@ -6,16 +6,21 @@ import { router as PutRouter } from '../router/put';
 import { router as DelRouter } from '../router/del';
 import { debugIO } from '../../lib/debug';
 
-export const AppFactory = function(stores: IStoresModel) {
-  const app = new Application({ domain: 'ide-tree' });
+export const AppFactory = function (stores: IStoresModel, innerApps: Record<string, Application> = {}) {
 
-    // 挂载 stores 到上下文中
-    app.use((ctx: any, next) => {
-        ctx.stores = stores;
-        debugIO(`[${stores.id}] request: ${JSON.stringify(ctx.request.toJSON())}`);
-        next();
-        debugIO(`[${stores.id}] [${ctx.request.method}] ${ctx.request.url} ==> response: ${JSON.stringify(ctx.response.toJSON())}`);
-    });
+  const app = new Application({ domain: 'ide-tree' });
+  app.innerApps = innerApps; // 新增 innerApps 的挂载
+
+  // 挂载 stores 到上下文中，注意这里的 next 必须要使用 async，否则 proxy 的时候将出现异步偏差
+  app.use(async (ctx: any, next: any) => {
+    ctx.stores = stores;
+    ctx.innerApps = innerApps;
+    // 因为存在代理，url 中的路径将有可能被更改
+    const originUrl = ctx.request.url;
+    debugIO(`[${stores.id}] request: ${JSON.stringify(ctx.request.toJSON())}`);
+    await next();
+    debugIO(`[${stores.id}] [${ctx.request.method}] ${originUrl} ==> response: ${JSON.stringify(ctx.response.toJSON())}`);
+  });
 
   // 注册路由
   app.use(GetRouter.routes());
@@ -24,4 +29,4 @@ export const AppFactory = function(stores: IStoresModel) {
   app.use(DelRouter.routes());
 
   return app;
-};
+}
