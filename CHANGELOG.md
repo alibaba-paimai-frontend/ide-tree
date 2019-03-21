@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="2.0.6"></a>
+## [2.0.6](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.5...v2.0.6) (2019-03-21)
+
+
+### Bug Fixes
+
+* **组件渲染:** 解决 stores 更改 schema 后无法 re-render 组件的问题 ([09be8a5](https://github.com/alibaba-paimai-frontend/ide-tree/commit/09be8a5))
+
+
+### Features
+
+* **功能完善: 代码风格:** 同步升级到最新的 tpl 代码风格，接入 addModelChangeListener 方法 ([77f9997](https://github.com/alibaba-paimai-frontend/ide-tree/commit/77f9997))
+
+
+
 <a name="2.0.5"></a>
 ## [2.0.5](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.4...v2.0.5) (2019-03-08)
 
