@@ -41,15 +41,15 @@ const onModelChange = function(key: string, value: any) {
   console.log('model changed:', key, value.toJSON ? value.toJSON() : value);
 };
 
-// render(
-//   <SchemaTree
-//     schema={schema}
-//     selectedId={'Col_1'}
-//     expandedIds={['Row_1']}
-//     onExpand={onExpand}
-//   />,
-//   document.getElementById('example') as HTMLElement
-// );
+render(
+  <SchemaTree
+    schema={schema}
+    selectedId={'Col_1'}
+    expandedIds={['Row_1']}
+    onExpand={onExpand}
+  />,
+  document.getElementById('example') as HTMLElement
+);
 
 // ========== with store ==============
 

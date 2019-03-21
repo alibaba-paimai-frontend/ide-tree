@@ -269,7 +269,6 @@ export const SchemaTreeAddStore: (
       otherPropsWithInjected.onModelChange
     );
 
-    console.log('444', controlledProps.schema);
     return (
       <SchemaTreeHasSubStore {...controlledProps} {...otherPropsWithInjected} />
     );
