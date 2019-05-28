@@ -18,9 +18,9 @@ import { DEFAULT_PROPS, ISchemaProps, ISchemaTreeProps } from '../index';
 // 而诸如 props、fetch 等字段，需要存储起来
 export enum SPECIAL_ATTRIBUTE_NAME {
   IDS = 'ids', // 该值是辅助编辑器判断 id 是否重复
-  CHILDREN = 'children', // children 属性
+  // CHILDREN = 'children', // children 属性
   ID = 'id', // id 属性,
-  NAME = 'name', // name 属性
+  // NAME = 'name', // name 属性
   PARENTID = 'parentId', // parentId 属性
   SCREENID = 'screenId' // screenId 属性
 }
