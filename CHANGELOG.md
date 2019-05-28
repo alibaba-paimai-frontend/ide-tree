@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.7](https://github.com/one-gourd/ide-tree/compare/v2.0.6...v2.0.7) (2019-05-28)
+
+
+### Features
+
+* 🎸 功能完善: 生成 schemaJSON 的时候不排查 name & children 属性 ([d0680a5](https://github.com/one-gourd/ide-tree/commit/d0680a5))
+
+
+
 <a name="2.0.6"></a>
 ## [2.0.6](https://github.com/alibaba-paimai-frontend/ide-tree/compare/v2.0.5...v2.0.6) (2019-03-21)
 
