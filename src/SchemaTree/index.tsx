@@ -120,7 +120,9 @@ const renderTree = (root: ISchemaModel | ISchemaProps) => {
     nodeArray.push({
       id: id,
       name: name,
-      component: <TreeNode title={name} key={id} />,
+      component: (
+        <TreeNode title={name} className={(id || '').replace('$', '')} key={id} />
+      ),
       parentId: parentId
     });
 
