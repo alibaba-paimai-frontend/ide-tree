@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.8](https://github.com/one-gourd/ide-tree/compare/v2.0.7...v2.0.8) (2019-07-03)
+
+
+### Features
+
+* 🎸 给节点新增 className ([b1a4a54](https://github.com/one-gourd/ide-tree/commit/b1a4a54))
+
+
+
 ## [2.0.7](https://github.com/one-gourd/ide-tree/compare/v2.0.6...v2.0.7) (2019-05-28)
 
 
